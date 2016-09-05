@@ -100,4 +100,24 @@ private void newLineAnim() {
 }
 ```
 代码比较简单，大家根据注释肯定能看懂。到这里，我们已经实现了滚动显示的歌词控件了。<br>
-大家可以运行[源码](https://github.com/ChanWong21/PonyMusic/blob/master/app/src/main/java/me/wcy/music/widget/LrcView.java)或下载[波尼音乐](http://fir.im/ponymusic)查看详细效果。
+截图看不出动画效果，大家可以运行源码或下载[波尼音乐](http://fir.im/ponymusic)查看详细效果。
+
+## 关于作者
+简书：http://www.jianshu.com/users/3231579893ac<br>
+微博：http://weibo.com/wangchenyan1993
+
+## License
+
+    Copyright 2016 Chay Wong
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
