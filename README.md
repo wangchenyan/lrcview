@@ -25,6 +25,26 @@ Android歌词控件，支持自动滚动，自定义界面。
 compile 'me.wcy.lrcview:lrcview:1.0.0'
 ```
 
+## 属性
+| 属性 | 描述 |
+| ---- | ---- |
+| lrcTextSize | 歌词文本字体大小 |
+| lrcDividerHeight | 歌词间距 |
+| lrcNormalTextColor | 非当前行歌词字体颜色 |
+| lrcCurrentTextColor | 当前行歌词字体颜色 |
+| lrcAnimationDuration | 歌词滚动动画时长 |
+| lrcLabel | 没有歌词时屏幕中央显示的文字，如“暂无歌词” |
+
+## 方法
+| 方法 | 描述 |
+| ---- | ---- |
+| hasLrc() | 歌词是否有效 |
+| loadLrc(File) | 加载歌词文件 |
+| loadLrc(String) | 加载歌词文本 |
+| onDrag(long) | 将歌词滚动到指定时间 |
+| setLabel(String) | 设置歌词为空时屏幕中央显示的文字，如“暂无歌词” |
+| updateTime(long) | 刷新歌词 |
+
 ## 思路分析
 首先，当前播放的那一行应该在视图中央，且高亮显示，然后是当前行以前的在上面，当前行以后的在下面，所以我们的绘制流程是先绘制当前行，然后依次绘制上面的和下面的。
 
