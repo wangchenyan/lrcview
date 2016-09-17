@@ -2,16 +2,15 @@ ext {
     bintrayRepo = 'maven'
     bintrayName = 'lrcview'
 
-    publishedGroupId = 'me.wcy.lrcview'
     libraryName = 'lrcview'
-    artifact = 'lrcview'
-
     libraryDescription = 'A lyric view on Android'
+
+    publishedGroupId = 'me.wcy.lrcview'
+    artifact = 'lrcview'
+    libraryVersion = rootProject.ext.versionName
 
     siteUrl = 'https://github.com/ChanWong21/LrcView'
     gitUrl = 'https://github.com/ChanWong21/LrcView.git'
-
-    libraryVersion = rootProject.ext.versionName
 
     developerId = 'ChanWong21'
     developerName = 'wcy'
