@@ -23,6 +23,7 @@ Android歌词控件，支持自动滚动，自定义界面。
 **Gradle**
 ```
 compile 'me.wcy.lrcview:lrcview:1.0.0'
+暂时无法使用，请下载源码。
 ```
 
 ## 属性
