@@ -1,3 +1,4 @@
+[![Download](https://api.bintray.com/packages/allencoder/maven/compareindicator/images/download.svg)](https://bintray.com/chanwong21/maven/lrcview/_latestVersion)
 # LrcView
 
 ## 系列文章
@@ -22,7 +23,7 @@ Android歌词控件，支持自动滚动，自定义界面。
 ## 使用
 **Gradle**
 ```
-compile 'me.wcy.lrcview:lrcview:1.0.0'
+compile 'me.wcy.lrcview:lrcview:latestVersion'
 ```
 
 ## 属性
