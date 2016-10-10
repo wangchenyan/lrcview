@@ -1,4 +1,4 @@
-[![Download](https://api.bintray.com/packages/allencoder/maven/compareindicator/images/download.svg)](https://bintray.com/chanwong21/maven/lrcview/_latestVersion)
+[![Download](https://api.bintray.com/packages/chanwong21/maven/lrcview/images/download.svg)](https://bintray.com/chanwong21/maven/lrcview/_latestVersion)
 # LrcView
 
 ## 系列文章
