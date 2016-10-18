@@ -77,9 +77,7 @@ public class LrcView extends View {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        for (Entry entry : mEntryList) {
-            entry.init(mPaint, (int) getLrcWidth());
-        }
+        initEntryList();
     }
 
     @Override
@@ -192,6 +190,7 @@ public class LrcView extends View {
             e.printStackTrace();
         }
 
+        initEntryList();
         initNextTime();
 
         postInvalidate();
@@ -215,6 +214,7 @@ public class LrcView extends View {
             parseLine(line);
         }
 
+        initEntryList();
         initNextTime();
 
         postInvalidate();
@@ -275,6 +275,16 @@ public class LrcView extends View {
         mEntryList.clear();
         mCurrentLine = 0;
         mNextTime = 0L;
+    }
+
+    private void initEntryList() {
+        if (getWidth() == 0) {
+            return;
+        }
+
+        for (Entry entry : mEntryList) {
+            entry.init(mPaint, (int) getLrcWidth());
+        }
     }
 
     private void initNextTime() {
@@ -368,6 +378,9 @@ public class LrcView extends View {
         }
 
         float getTextHeight() {
+            if (paint == null || staticLayout == null) {
+                return 0;
+            }
             return staticLayout.getLineCount() * paint.getTextSize();
         }
     }
