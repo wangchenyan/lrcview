@@ -16,21 +16,29 @@
         android:id="@+id/lrc_big"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="3"
+        android:layout_weight="2"
+        app:lrcAnimationDuration="1000"
         app:lrcCurrentTextColor="?attr/colorPrimary"
+        app:lrcDividerHeight="24dp"
+        app:lrcLabel="找不到歌词(&gt;_&lt;)"
         app:lrcNormalTextColor="@android:color/darker_gray"
+        app:lrcPadding="16dp"
         app:lrcTextSize="16sp" />
 
     <me.wcy.lrcview.LrcView
         android:id="@+id/lrc_small"
-        android:layout_width="200dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="@dimen/activity_vertical_margin"
         android:layout_weight="1"
         android:background="@android:color/black"
-        app:lrcAnimationDuration="300"
+        app:lrcAnimationDuration="600"
+        app:lrcCurrentTextColor="?attr/colorAccent"
         app:lrcDividerHeight="12dp"
-        app:lrcTextSize="16sp" />
+        app:lrcLabel="找不到歌词(&gt;_&lt;)"
+        app:lrcNormalTextColor="@android:color/white"
+        app:lrcPadding="100dp"
+        app:lrcTextSize="12sp" />
 
     <Button
         android:id="@+id/btn_play_pause"
