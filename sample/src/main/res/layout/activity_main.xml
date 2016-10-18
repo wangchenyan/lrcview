@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center_horizontal"
     android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
@@ -17,18 +18,19 @@
         android:layout_height="0dp"
         android:layout_weight="3"
         app:lrcCurrentTextColor="?attr/colorPrimary"
-        app:lrcNormalTextColor="@android:color/darker_gray" />
+        app:lrcNormalTextColor="@android:color/darker_gray"
+        app:lrcTextSize="16sp" />
 
     <me.wcy.lrcview.LrcView
         android:id="@+id/lrc_small"
-        android:layout_width="match_parent"
+        android:layout_width="200dp"
         android:layout_height="0dp"
         android:layout_marginTop="@dimen/activity_vertical_margin"
         android:layout_weight="1"
         android:background="@android:color/black"
         app:lrcAnimationDuration="300"
         app:lrcDividerHeight="12dp"
-        app:lrcTextSize="12sp" />
+        app:lrcTextSize="16sp" />
 
     <Button
         android:id="@+id/btn_play_pause"

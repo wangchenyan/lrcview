@@ -6,6 +6,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -24,10 +25,10 @@ import java.util.regex.Pattern;
  * Created by wcy on 2015/11/9.
  */
 public class LrcView extends View {
-    private List<Long> mLrcTimes;
-    private List<String> mLrcTexts;
-    private Paint mNormalPaint;
-    private Paint mCurrentPaint;
+    private List<Long> mLrcTimes = new ArrayList<>();
+    private List<String> mLrcTexts = new ArrayList<>();
+    private Paint mNormalPaint = new Paint();
+    private Paint mCurrentPaint = new Paint();
     private float mTextSize;
     private float mDividerHeight;
     private long mAnimationDuration;
@@ -50,9 +51,6 @@ public class LrcView extends View {
         init(attrs);
     }
 
-    /**
-     * 初始化
-     */
     private void init(AttributeSet attrs) {
         TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.LrcView);
         mTextSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, sp2px(16));
@@ -65,16 +63,15 @@ public class LrcView extends View {
         label = TextUtils.isEmpty(label) ? "暂无歌词" : label;
         ta.recycle();
 
-        mLrcTimes = new ArrayList<>();
-        mLrcTexts = new ArrayList<>();
-        mNormalPaint = new Paint();
-        mCurrentPaint = new Paint();
         mNormalPaint.setAntiAlias(true);
         mNormalPaint.setColor(normalColor);
         mNormalPaint.setTextSize(mTextSize);
+        mNormalPaint.setTextAlign(Paint.Align.CENTER);
+
         mCurrentPaint.setAntiAlias(true);
         mCurrentPaint.setColor(currentColor);
         mCurrentPaint.setTextSize(mTextSize);
+        mCurrentPaint.setTextAlign(Paint.Align.CENTER);
     }
 
     @Override
@@ -85,20 +82,20 @@ public class LrcView extends View {
 
         // 无歌词文件
         if (!hasLrc()) {
-            float centerX = (getWidth() - mCurrentPaint.measureText(label)) / 2;
+            float centerX = getWidth() / 2;
             canvas.drawText(label, centerX, centerY, mCurrentPaint);
             return;
         }
 
         // 画当前行
         String currStr = mLrcTexts.get(mCurrentLine);
-        float currX = (getWidth() - mCurrentPaint.measureText(currStr)) / 2;
+        float currX = getWidth() / 2;
         canvas.drawText(currStr, currX, centerY, mCurrentPaint);
 
         // 画当前行上面的
         for (int i = mCurrentLine - 1; i >= 0; i--) {
             String upStr = mLrcTexts.get(i);
-            float upX = (getWidth() - mNormalPaint.measureText(upStr)) / 2;
+            float upX = getWidth() / 2;
             float upY = centerY - (mTextSize + mDividerHeight) * (mCurrentLine - i);
             // 超出屏幕停止绘制
             if (upY - mTextSize < 0) {
@@ -110,7 +107,7 @@ public class LrcView extends View {
         // 画当前行下面的
         for (int i = mCurrentLine + 1; i < mLrcTimes.size(); i++) {
             String downStr = mLrcTexts.get(i);
-            float downX = (getWidth() - mNormalPaint.measureText(downStr)) / 2;
+            float downX = getWidth() / 2;
             float downY = centerY + (mTextSize + mDividerHeight) * (i - mCurrentLine);
             // 超出屏幕停止绘制
             if (downY > getHeight()) {
@@ -143,24 +140,18 @@ public class LrcView extends View {
             return;
         }
 
-        BufferedReader br = null;
         try {
-            br = new BufferedReader(new InputStreamReader(new FileInputStream(lrcFile), "utf-8"));
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(lrcFile), "utf-8"));
             String line;
             while ((line = br.readLine()) != null) {
                 parseLine(line);
             }
+            br.close();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                if (br != null) {
-                    br.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
+
+        initNextTime();
 
         postInvalidate();
     }
@@ -178,20 +169,14 @@ public class LrcView extends View {
             return;
         }
 
-        String[] array = lrcText.split("\n");
+        String[] array = lrcText.split("\\n");
         for (String line : array) {
             parseLine(line);
         }
 
-        postInvalidate();
-    }
+        initNextTime();
 
-    private void reset() {
-        mLrcTexts.clear();
-        mLrcTimes.clear();
-        mCurrentLine = 0;
-        mNextTime = 0L;
-        isEnd = false;
+        postInvalidate();
     }
 
     /**
@@ -240,10 +225,24 @@ public class LrcView extends View {
     /**
      * 歌词是否有效
      *
-     * @return true，如果歌词有效，否则else
+     * @return true，如果歌词有效，否则false
      */
     public boolean hasLrc() {
         return mLrcTexts != null && !mLrcTexts.isEmpty();
+    }
+
+    private void reset() {
+        mLrcTexts.clear();
+        mLrcTimes.clear();
+        mCurrentLine = 0;
+        mNextTime = 0L;
+        isEnd = false;
+    }
+
+    private void initNextTime() {
+        if (mLrcTimes.size() > 1) {
+            mNextTime = mLrcTimes.get(1);
+        }
     }
 
     /**
@@ -252,41 +251,26 @@ public class LrcView extends View {
      * @param line [00:10.61]走过了人来人往
      */
     private void parseLine(String line) {
-        Matcher matcher = Pattern.compile("\\[(\\d)+:(\\d)+(\\.)(\\d+)\\].+").matcher(line);
+        line = line.trim();
+        Matcher matcher = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d\\d)\\](.+)").matcher(line);
         if (!matcher.matches()) {
             return;
         }
-        line = line.replaceAll("\\[", "");
-        String[] result = line.split("\\]");
-        result[0] = parseTime(result[0]);
-        mLrcTimes.add(Long.parseLong(result[0]));
-        mLrcTexts.add(result[1]);
+
+        long min = Long.parseLong(matcher.group(1));
+        long sec = Long.parseLong(matcher.group(2));
+        long mil = Long.parseLong(matcher.group(3));
+        String text = matcher.group(4);
+
+        long time = min * DateUtils.MINUTE_IN_MILLIS + sec * DateUtils.SECOND_IN_MILLIS + mil * 10;
+
+        mLrcTimes.add(time);
+        mLrcTexts.add(text);
     }
 
     /**
-     * 解析时间
-     *
-     * @param time 00:10.61
-     * @return long
-     */
-    private String parseTime(String time) {
-        time = time.replaceAll(":", "\\.");
-        String[] times = time.split("\\.");
-        long l = 0L;
-        try {
-            long min = Long.parseLong(times[0]);
-            long sec = Long.parseLong(times[1]);
-            long mil = Long.parseLong(times[2]);
-            l = min * 60 * 1000 + sec * 1000 + mil * 10;
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
-        return String.valueOf(l);
-    }
-
-    /**
-     * 换行动画
-     * Note:属性动画只能在主线程使用
+     * 换行动画<br>
+     * 属性动画只能在主线程使用
      */
     private void newLineAnim() {
         ValueAnimator animator = ValueAnimator.ofFloat(mTextSize + mDividerHeight, 0.0f);
