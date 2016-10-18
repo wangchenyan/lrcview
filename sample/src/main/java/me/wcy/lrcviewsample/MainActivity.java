@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(am.openFd("cbg.mp3").getFileDescriptor());
-            mediaPlayer.prepare();
+            mediaPlayer.prepareAsync();
         } catch (IOException e) {
             e.printStackTrace();
         }
