@@ -2,7 +2,7 @@ ext {
     bintrayRepo = 'maven'
     bintrayName = 'lrcview'
 
-    publishedGroupId = 'me.wcy.lrcview'
+    publishedGroupId = 'me.wcy'
     artifact = 'lrcview'
 
     libraryName = 'lrcview'
