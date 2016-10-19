@@ -1,5 +1,5 @@
-[![Download](https://api.bintray.com/packages/chanwong21/maven/lrcview/images/download.svg)](https://bintray.com/chanwong21/maven/lrcview/_latestVersion)
 # LrcView
+[![Download](https://api.bintray.com/packages/chanwong21/maven/lrcview/images/download.svg)](https://bintray.com/chanwong21/maven/lrcview/_latestVersion)
 
 ## 系列文章
 * [Android开源在线音乐播放器——波尼音乐](http://www.jianshu.com/p/1c0f5c4f64fa)
@@ -28,7 +28,7 @@ Android歌词控件，支持自动滚动，超长歌词自动换行，自定义�
 * 支持自动滚动
 * 支持自定义属性
 
-![](https://raw.githubusercontent.com/ChanWong21/LrcView/master/art/screenshot.jpg)
+![](https://raw.githubusercontent.com/ChanWong21/LrcView/master/art/screenshot.gif)
 
 ## 使用
 **Gradle**
