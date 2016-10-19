@@ -161,8 +161,6 @@ public class LrcView extends View {
      * 设置歌词为空时屏幕中央显示的文字，如“暂无歌词”
      */
     public void setLabel(String label) {
-        reset();
-
         mLabel = label;
         postInvalidate();
     }
@@ -175,24 +173,21 @@ public class LrcView extends View {
     public void loadLrc(File lrcFile) {
         reset();
 
-        if (lrcFile == null || !lrcFile.exists()) {
-            postInvalidate();
-            return;
-        }
-
-        try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(lrcFile), "utf-8"));
-            String line;
-            while ((line = br.readLine()) != null) {
-                parseLine(line);
+        if (lrcFile != null && lrcFile.exists()) {
+            try {
+                BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(lrcFile), "utf-8"));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    parseLine(line);
+                }
+                br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            br.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        initEntryList();
-        initNextTime();
+            initEntryList();
+            initNextTime();
+        }
 
         postInvalidate();
     }
@@ -205,18 +200,15 @@ public class LrcView extends View {
     public void loadLrc(String lrcText) {
         reset();
 
-        if (TextUtils.isEmpty(lrcText)) {
-            postInvalidate();
-            return;
-        }
+        if (!TextUtils.isEmpty(lrcText)) {
+            String[] array = lrcText.split("\\n");
+            for (String line : array) {
+                parseLine(line);
+            }
 
-        String[] array = lrcText.split("\\n");
-        for (String line : array) {
-            parseLine(line);
+            initEntryList();
+            initNextTime();
         }
-
-        initEntryList();
-        initNextTime();
 
         postInvalidate();
     }
