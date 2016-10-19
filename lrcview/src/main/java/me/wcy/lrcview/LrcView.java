@@ -94,7 +94,8 @@ public class LrcView extends View {
         // 无歌词文件
         if (!hasLrc()) {
             @SuppressLint("DrawAllocation")
-            StaticLayout staticLayout = new StaticLayout(mLabel, mPaint, (int) getLrcWidth(), Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false);
+            StaticLayout staticLayout = new StaticLayout(mLabel, mPaint, (int) getLrcWidth(),
+                    Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false);
             drawText(canvas, staticLayout, centerY - staticLayout.getLineCount() * mTextSize / 2);
             return;
         }
