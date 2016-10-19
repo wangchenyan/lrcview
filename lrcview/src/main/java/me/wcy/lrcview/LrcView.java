@@ -109,7 +109,7 @@ public class LrcView extends View {
         for (int i = mCurrentLine - 1; i >= 0; i--) {
             upY -= mDividerHeight + mLrcEntryList.get(i).getTextHeight();
 
-            if (mAnimator == null || !mAnimator.isStarted()) {
+            if (mAnimator == null || !mAnimator.isRunning()) {
                 // 动画已经结束，超出屏幕停止绘制
                 if (upY < 0) {
                     break;
@@ -127,7 +127,7 @@ public class LrcView extends View {
         // 画当前行下面的
         float downY = currY + mLrcEntryList.get(mCurrentLine).getTextHeight() + mDividerHeight;
         for (int i = mCurrentLine + 1; i < mLrcEntryList.size(); i++) {
-            if (mAnimator == null || !mAnimator.isStarted()) {
+            if (mAnimator == null || !mAnimator.isRunning()) {
                 // 动画已经结束，超出屏幕停止绘制
                 if (downY + mLrcEntryList.get(i).getTextHeight() > getHeight()) {
                     break;
@@ -328,7 +328,7 @@ public class LrcView extends View {
      * 属性动画只能在主线程使用
      */
     private void newlineAnimate(int index) {
-        if (mAnimator != null && mAnimator.isStarted()) {
+        if (mAnimator != null && mAnimator.isRunning()) {
             mAnimator.end();
         }
 
