@@ -353,40 +353,4 @@ public class LrcView extends View {
         float fontScale = getContext().getResources().getDisplayMetrics().scaledDensity;
         return (int) (spValue * fontScale + 0.5f);
     }
-
-    private static class LrcEntry {
-        private long time;
-        private String text;
-        private StaticLayout staticLayout;
-        private TextPaint paint;
-
-        LrcEntry(long time, String text) {
-            this.time = time;
-            this.text = text;
-        }
-
-        void init(TextPaint paint, int width) {
-            this.paint = paint;
-            staticLayout = new StaticLayout(text, paint, width, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false);
-        }
-
-        long getTime() {
-            return time;
-        }
-
-        String getText() {
-            return text;
-        }
-
-        StaticLayout getStaticLayout() {
-            return staticLayout;
-        }
-
-        float getTextHeight() {
-            if (paint == null || staticLayout == null) {
-                return 0;
-            }
-            return staticLayout.getLineCount() * paint.getTextSize();
-        }
-    }
 }
