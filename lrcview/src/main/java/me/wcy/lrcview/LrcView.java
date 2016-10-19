@@ -227,13 +227,13 @@ public class LrcView extends View {
             if (mLrcEntryList.get(i).getTime() > time) {
                 mNextTime = mLrcEntryList.get(i).getTime();
                 mCurrentLine = i < 1 ? 0 : i - 1;
-                newlineAnimate(i);
+                newlineAnimation(i);
                 break;
             } else if (i == mLrcEntryList.size() - 1) {
                 // 最后一行
                 mCurrentLine = mLrcEntryList.size() - 1;
                 mNextTime = Long.MAX_VALUE;
-                newlineAnimate(i);
+                newlineAnimation(i);
                 break;
             }
         }
@@ -254,7 +254,7 @@ public class LrcView extends View {
                     mCurrentLine = i - 1;
                     mNextTime = mLrcEntryList.get(i).getTime();
                 }
-                newlineAnimate(i);
+                newlineAnimation(i);
                 break;
             }
         }
@@ -273,6 +273,8 @@ public class LrcView extends View {
         mLrcEntryList.clear();
         mCurrentLine = 0;
         mNextTime = 0L;
+
+        stopAnimation();
     }
 
     private void initEntryList() {
@@ -320,10 +322,8 @@ public class LrcView extends View {
      * 换行动画<br>
      * 属性动画只能在主线程使用
      */
-    private void newlineAnimate(int index) {
-        if (mAnimator != null && mAnimator.isRunning()) {
-            mAnimator.end();
-        }
+    private void newlineAnimation(int index) {
+        stopAnimation();
 
         mAnimator = ValueAnimator.ofFloat(mLrcEntryList.get(index).getTextHeight() + mDividerHeight, 0.0f);
         mAnimator.setDuration(mAnimationDuration * mLrcEntryList.get(index).getStaticLayout().getLineCount());
@@ -335,6 +335,12 @@ public class LrcView extends View {
             }
         });
         mAnimator.start();
+    }
+
+    private void stopAnimation() {
+        if (mAnimator != null && mAnimator.isRunning()) {
+            mAnimator.end();
+        }
     }
 
     private int dp2px(float dpValue) {
