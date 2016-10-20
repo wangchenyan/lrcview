@@ -20,7 +20,7 @@ class LrcEntry {
 
     void init(TextPaint paint, int width) {
         this.paint = paint;
-        staticLayout = new StaticLayout(text, paint, width, Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false);
+        staticLayout = new StaticLayout(text, paint, width, Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
     }
 
     long getTime() {

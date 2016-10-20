@@ -71,7 +71,7 @@ public class LrcView extends View {
 
         mPaint.setAntiAlias(true);
         mPaint.setTextSize(mTextSize);
-        mPaint.setTextAlign(Paint.Align.CENTER);
+        mPaint.setTextAlign(Paint.Align.LEFT);
     }
 
     @Override
@@ -148,7 +148,7 @@ public class LrcView extends View {
 
     private void drawText(Canvas canvas, StaticLayout staticLayout, float y) {
         canvas.save();
-        canvas.translate(getWidth() / 2, y);
+        canvas.translate(mLrcPadding, y);
         staticLayout.draw(canvas);
         canvas.restore();
     }
