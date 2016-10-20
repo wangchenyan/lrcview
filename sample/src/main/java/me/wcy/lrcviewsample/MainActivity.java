@@ -5,7 +5,6 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 
@@ -42,9 +41,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             e.printStackTrace();
         }
 
+        lrcBig.loadLrc(getLrcText("rtl.lrc"));
+        lrcSmall.loadLrc(getLrcText("cbg.lrc"));
+    }
+
+    private String getLrcText(String fileName) {
         String lrcText = null;
         try {
-            InputStream is = am.open("cbg.lrc");
+            InputStream is = getAssets().open(fileName);
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
@@ -53,10 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (!TextUtils.isEmpty(lrcText)) {
-            lrcBig.loadLrc(lrcText);
-            lrcSmall.loadLrc(lrcText);
-        }
+        return lrcText;
     }
 
     @Override
