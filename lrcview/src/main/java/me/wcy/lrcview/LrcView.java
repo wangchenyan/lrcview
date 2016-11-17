@@ -10,19 +10,13 @@ import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 import android.util.AttributeSet;
 import android.view.View;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 歌词
@@ -58,8 +52,8 @@ public class LrcView extends View {
 
     private void init(AttributeSet attrs) {
         TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.LrcView);
-        mTextSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, sp2px(12));
-        mDividerHeight = ta.getDimension(R.styleable.LrcView_lrcDividerHeight, dp2px(16));
+        mTextSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, LrcUtils.sp2px(getContext(), 12));
+        mDividerHeight = ta.getDimension(R.styleable.LrcView_lrcDividerHeight, LrcUtils.dp2px(getContext(), 16));
         mAnimationDuration = ta.getInt(R.styleable.LrcView_lrcAnimationDuration, 1000);
         mAnimationDuration = mAnimationDuration < 0 ? 1000 : mAnimationDuration;
         mNormalColor = ta.getColor(R.styleable.LrcView_lrcNormalTextColor, 0xFFFFFFFF);
@@ -171,25 +165,8 @@ public class LrcView extends View {
      * @param lrcFile 歌词文件
      */
     public void loadLrc(File lrcFile) {
-        reset();
-
-        if (lrcFile != null && lrcFile.exists()) {
-            try {
-                BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(lrcFile), "utf-8"));
-                String line;
-                while ((line = br.readLine()) != null) {
-                    parseLine(line);
-                }
-                br.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            initEntryList();
-            initNextTime();
-        }
-
-        postInvalidate();
+        List<LrcEntry> entryList = LrcEntry.parseLrc(lrcFile);
+        onLrcLoaded(entryList);
     }
 
     /**
@@ -198,14 +175,18 @@ public class LrcView extends View {
      * @param lrcText 歌词文本
      */
     public void loadLrc(String lrcText) {
+        List<LrcEntry> entryList = LrcEntry.parseLrc(lrcText);
+        onLrcLoaded(entryList);
+    }
+
+    private void onLrcLoaded(List<LrcEntry> entryList) {
         reset();
 
-        if (!TextUtils.isEmpty(lrcText)) {
-            String[] array = lrcText.split("\\n");
-            for (String line : array) {
-                parseLine(line);
-            }
+        if (entryList != null && !entryList.isEmpty()) {
+            mLrcEntryList.addAll(entryList);
+        }
 
+        if (hasLrc()) {
             initEntryList();
             initNextTime();
         }
@@ -226,14 +207,14 @@ public class LrcView extends View {
         for (int i = mCurrentLine; i < mLrcEntryList.size(); i++) {
             if (mLrcEntryList.get(i).getTime() > time) {
                 mNextTime = mLrcEntryList.get(i).getTime();
-                mCurrentLine = i < 1 ? 0 : i - 1;
-                newlineAnimation(i);
+                mCurrentLine = (i < 1) ? 0 : (i - 1);
+                newlineOnUI(i);
                 break;
             } else if (i == mLrcEntryList.size() - 1) {
                 // 最后一行
                 mCurrentLine = mLrcEntryList.size() - 1;
                 mNextTime = Long.MAX_VALUE;
-                newlineAnimation(i);
+                newlineOnUI(i);
                 break;
             }
         }
@@ -254,7 +235,7 @@ public class LrcView extends View {
                     mCurrentLine = i - 1;
                     mNextTime = mLrcEntryList.get(i).getTime();
                 }
-                newlineAnimation(i);
+                newlineOnUI(i);
                 break;
             }
         }
@@ -282,6 +263,8 @@ public class LrcView extends View {
             return;
         }
 
+        Collections.sort(mLrcEntryList);
+
         for (LrcEntry lrcEntry : mLrcEntryList) {
             lrcEntry.init(mPaint, (int) getLrcWidth());
         }
@@ -295,27 +278,13 @@ public class LrcView extends View {
         }
     }
 
-    /**
-     * 解析一行
-     *
-     * @param line [00:10.61]走过了人来人往
-     */
-    private void parseLine(String line) {
-        line = line.trim();
-        Matcher matcher = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d\\d)\\](.+)").matcher(line);
-        if (!matcher.matches()) {
-            return;
-        }
-
-        long min = Long.parseLong(matcher.group(1));
-        long sec = Long.parseLong(matcher.group(2));
-        long mil = Long.parseLong(matcher.group(3));
-        String text = matcher.group(4);
-
-        long time = min * DateUtils.MINUTE_IN_MILLIS + sec * DateUtils.SECOND_IN_MILLIS + mil * 10;
-
-        LrcEntry lrcEntry = new LrcEntry(time, text);
-        mLrcEntryList.add(lrcEntry);
+    private void newlineOnUI(final int index) {
+        post(new Runnable() {
+            @Override
+            public void run() {
+                newlineAnimation(index);
+            }
+        });
     }
 
     /**
@@ -341,15 +310,5 @@ public class LrcView extends View {
         if (mAnimator != null && mAnimator.isRunning()) {
             mAnimator.end();
         }
-    }
-
-    private int dp2px(float dpValue) {
-        float scale = getContext().getResources().getDisplayMetrics().density;
-        return (int) (dpValue * scale + 0.5f);
-    }
-
-    private int sp2px(float spValue) {
-        float fontScale = getContext().getResources().getDisplayMetrics().scaledDensity;
-        return (int) (spValue * fontScale + 0.5f);
     }
 }
