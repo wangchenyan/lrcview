@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.AsyncTask;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
@@ -164,9 +165,25 @@ public class LrcView extends View {
      *
      * @param lrcFile 歌词文件
      */
-    public void loadLrc(File lrcFile) {
-        List<LrcEntry> entryList = LrcEntry.parseLrc(lrcFile);
-        onLrcLoaded(entryList);
+    public void loadLrc(final File lrcFile) {
+        reset();
+
+        setTag(lrcFile);
+        AsyncTask<File, Integer, List<LrcEntry>> loadLrcTask = new AsyncTask<File, Integer, List<LrcEntry>>() {
+            @Override
+            protected List<LrcEntry> doInBackground(File... params) {
+                return LrcEntry.parseLrc(params[0]);
+            }
+
+            @Override
+            protected void onPostExecute(List<LrcEntry> lrcEntries) {
+                if (getTag() == lrcFile) {
+                    onLrcLoaded(lrcEntries);
+                    setTag(null);
+                }
+            }
+        };
+        loadLrcTask.execute(lrcFile);
     }
 
     /**
@@ -174,14 +191,28 @@ public class LrcView extends View {
      *
      * @param lrcText 歌词文本
      */
-    public void loadLrc(String lrcText) {
-        List<LrcEntry> entryList = LrcEntry.parseLrc(lrcText);
-        onLrcLoaded(entryList);
+    public void loadLrc(final String lrcText) {
+        reset();
+
+        setTag(lrcText);
+        AsyncTask<String, Integer, List<LrcEntry>> loadLrcTask = new AsyncTask<String, Integer, List<LrcEntry>>() {
+            @Override
+            protected List<LrcEntry> doInBackground(String... params) {
+                return LrcEntry.parseLrc(params[0]);
+            }
+
+            @Override
+            protected void onPostExecute(List<LrcEntry> lrcEntries) {
+                if (getTag() == lrcText) {
+                    onLrcLoaded(lrcEntries);
+                    setTag(null);
+                }
+            }
+        };
+        loadLrcTask.execute(lrcText);
     }
 
     private void onLrcLoaded(List<LrcEntry> entryList) {
-        reset();
-
         if (entryList != null && !entryList.isEmpty()) {
             mLrcEntryList.addAll(entryList);
         }
@@ -256,6 +287,7 @@ public class LrcView extends View {
         mNextTime = 0L;
 
         stopAnimation();
+        postInvalidate();
     }
 
     private void initEntryList() {
