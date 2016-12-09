@@ -12,7 +12,7 @@
 上一节我们仿照云音乐实现了黑胶唱片专辑封面，这节我们该实现歌词显示了。当然，歌词不仅仅是显示就完了，作为一个有素质的音乐播放器，我们当然还需要根据歌曲进度自动滚动歌词，并且要有滚动动画。
 
 * **开源不易，希望能给个Star鼓励**
-* 项目地址：https://github.com/ChanWong21/LrcView
+* 项目地址：https://github.com/wangchenyan/LrcView
 * 有问题请提Issues
 
 ## 简介
@@ -37,7 +37,7 @@ Android歌词控件，支持自动滚动，超长歌词自动换行，自定义�
 * 支持自动滚动
 * 支持自定义属性
 
-![](https://raw.githubusercontent.com/ChanWong21/LrcView/master/art/screenshot.gif)
+![](https://raw.githubusercontent.com/wangchenyan/LrcView/master/art/screenshot.gif)
 
 ## 使用
 **Gradle**
