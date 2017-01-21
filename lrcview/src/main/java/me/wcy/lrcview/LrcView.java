@@ -13,6 +13,7 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class LrcView extends View {
     private float mAnimateOffset;
     private long mNextTime = 0L;
     private int mCurrentLine = 0;
+    private Object mFlag;
 
     public LrcView(Context context) {
         this(context, null);
@@ -56,7 +58,7 @@ public class LrcView extends View {
         mTextSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, LrcUtils.sp2px(getContext(), 12));
         mDividerHeight = ta.getDimension(R.styleable.LrcView_lrcDividerHeight, LrcUtils.dp2px(getContext(), 16));
         mAnimationDuration = ta.getInt(R.styleable.LrcView_lrcAnimationDuration, 1000);
-        mAnimationDuration = mAnimationDuration < 0 ? 1000 : mAnimationDuration;
+        mAnimationDuration = (mAnimationDuration < 0) ? 1000 : mAnimationDuration;
         mNormalColor = ta.getColor(R.styleable.LrcView_lrcNormalTextColor, 0xFFFFFFFF);
         mCurrentColor = ta.getColor(R.styleable.LrcView_lrcCurrentTextColor, 0xFFFF4081);
         mLabel = ta.getString(R.styleable.LrcView_lrcLabel);
@@ -104,18 +106,9 @@ public class LrcView extends View {
         float upY = currY;
         for (int i = mCurrentLine - 1; i >= 0; i--) {
             upY -= mDividerHeight + mLrcEntryList.get(i).getTextHeight();
-
-            if (mAnimator == null || !mAnimator.isRunning()) {
-                // 动画已经结束，超出屏幕停止绘制
-                if (upY < 0) {
-                    break;
-                }
-            }
-
             drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), upY);
 
-            // 动画未结束，超出屏幕多绘制一行
-            if (upY < 0) {
+            if (upY <= 0) {
                 break;
             }
         }
@@ -123,17 +116,9 @@ public class LrcView extends View {
         // 画当前行下面的
         float downY = currY + mLrcEntryList.get(mCurrentLine).getTextHeight() + mDividerHeight;
         for (int i = mCurrentLine + 1; i < mLrcEntryList.size(); i++) {
-            if (mAnimator == null || !mAnimator.isRunning()) {
-                // 动画已经结束，超出屏幕停止绘制
-                if (downY + mLrcEntryList.get(i).getTextHeight() > getHeight()) {
-                    break;
-                }
-            }
-
             drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), downY);
 
-            // 动画未结束，超出屏幕多绘制一行
-            if (downY + mLrcEntryList.get(i).getTextHeight() > getHeight()) {
+            if (downY + mLrcEntryList.get(i).getTextHeight() >= getHeight()) {
                 break;
             }
 
@@ -168,7 +153,7 @@ public class LrcView extends View {
     public void loadLrc(final File lrcFile) {
         reset();
 
-        setTag(lrcFile);
+        setFlag(lrcFile);
         AsyncTask<File, Integer, List<LrcEntry>> loadLrcTask = new AsyncTask<File, Integer, List<LrcEntry>>() {
             @Override
             protected List<LrcEntry> doInBackground(File... params) {
@@ -177,9 +162,9 @@ public class LrcView extends View {
 
             @Override
             protected void onPostExecute(List<LrcEntry> lrcEntries) {
-                if (getTag() == lrcFile) {
+                if (getFlag() == lrcFile) {
                     onLrcLoaded(lrcEntries);
-                    setTag(null);
+                    setFlag(null);
                 }
             }
         };
@@ -194,7 +179,7 @@ public class LrcView extends View {
     public void loadLrc(final String lrcText) {
         reset();
 
-        setTag(lrcText);
+        setFlag(lrcText);
         AsyncTask<String, Integer, List<LrcEntry>> loadLrcTask = new AsyncTask<String, Integer, List<LrcEntry>>() {
             @Override
             protected List<LrcEntry> doInBackground(String... params) {
@@ -203,9 +188,9 @@ public class LrcView extends View {
 
             @Override
             protected void onPostExecute(List<LrcEntry> lrcEntries) {
-                if (getTag() == lrcText) {
+                if (getFlag() == lrcText) {
                     onLrcLoaded(lrcEntries);
-                    setTag(null);
+                    setFlag(null);
                 }
             }
         };
@@ -328,6 +313,7 @@ public class LrcView extends View {
 
         mAnimator = ValueAnimator.ofFloat(mLrcEntryList.get(index).getTextHeight() + mDividerHeight, 0.0f);
         mAnimator.setDuration(mAnimationDuration * mLrcEntryList.get(index).getStaticLayout().getLineCount());
+        mAnimator.setInterpolator(new LinearInterpolator());
         mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -342,5 +328,13 @@ public class LrcView extends View {
         if (mAnimator != null && mAnimator.isRunning()) {
             mAnimator.end();
         }
+    }
+
+    public Object getFlag() {
+        return mFlag;
+    }
+
+    public void setFlag(Object flag) {
+        this.mFlag = flag;
     }
 }

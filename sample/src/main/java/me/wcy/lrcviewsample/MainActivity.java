@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             e.printStackTrace();
         }
 
-        lrcBig.loadLrc(getLrcText("rtl.lrc"));
+        lrcBig.loadLrc(getLrcText("cbg.lrc"));
         lrcSmall.loadLrc(getLrcText("cbg.lrc"));
     }
 
