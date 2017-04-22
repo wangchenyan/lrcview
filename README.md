@@ -17,6 +17,7 @@
 
 ## 简介
 Android歌词控件，支持自动滚动，超长歌词自动换行，自定义属性。
+![](https://raw.githubusercontent.com/wangchenyan/LrcView/master/art/screenshot.gif)
 
 ## 更新说明
 `v 1.4`
@@ -37,11 +38,10 @@ Android歌词控件，支持自动滚动，超长歌词自动换行，自定义�
 * 支持自动滚动
 * 支持自定义属性
 
-![](https://raw.githubusercontent.com/wangchenyan/LrcView/master/art/screenshot.gif)
-
 ## 使用
 **Gradle**
 ```
+// `latestVersion`改为文首徽章后对应的数值
 compile 'me.wcy:lrcview:latestVersion'
 ```
 
