@@ -7,6 +7,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.AsyncTask;
+import android.os.Looper;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
@@ -140,9 +141,14 @@ public class LrcView extends View {
     /**
      * 设置歌词为空时屏幕中央显示的文字，如“暂无歌词”
      */
-    public void setLabel(String label) {
-        mLabel = label;
-        postInvalidate();
+    public void setLabel(final String label) {
+        runOnUi(new Runnable() {
+            @Override
+            public void run() {
+                mLabel = label;
+                invalidate();
+            }
+        });
     }
 
     /**
@@ -151,24 +157,28 @@ public class LrcView extends View {
      * @param lrcFile 歌词文件
      */
     public void loadLrc(final File lrcFile) {
-        reset();
-
-        setFlag(lrcFile);
-        AsyncTask<File, Integer, List<LrcEntry>> loadLrcTask = new AsyncTask<File, Integer, List<LrcEntry>>() {
+        runOnUi(new Runnable() {
             @Override
-            protected List<LrcEntry> doInBackground(File... params) {
-                return LrcEntry.parseLrc(params[0]);
-            }
+            public void run() {
+                reset();
 
-            @Override
-            protected void onPostExecute(List<LrcEntry> lrcEntries) {
-                if (getFlag() == lrcFile) {
-                    onLrcLoaded(lrcEntries);
-                    setFlag(null);
-                }
+                setFlag(lrcFile);
+                new AsyncTask<File, Integer, List<LrcEntry>>() {
+                    @Override
+                    protected List<LrcEntry> doInBackground(File... params) {
+                        return LrcEntry.parseLrc(params[0]);
+                    }
+
+                    @Override
+                    protected void onPostExecute(List<LrcEntry> lrcEntries) {
+                        if (getFlag() == lrcFile) {
+                            onLrcLoaded(lrcEntries);
+                            setFlag(null);
+                        }
+                    }
+                }.execute(lrcFile);
             }
-        };
-        loadLrcTask.execute(lrcFile);
+        });
     }
 
     /**
@@ -177,24 +187,28 @@ public class LrcView extends View {
      * @param lrcText 歌词文本
      */
     public void loadLrc(final String lrcText) {
-        reset();
-
-        setFlag(lrcText);
-        AsyncTask<String, Integer, List<LrcEntry>> loadLrcTask = new AsyncTask<String, Integer, List<LrcEntry>>() {
+        runOnUi(new Runnable() {
             @Override
-            protected List<LrcEntry> doInBackground(String... params) {
-                return LrcEntry.parseLrc(params[0]);
-            }
+            public void run() {
+                reset();
 
-            @Override
-            protected void onPostExecute(List<LrcEntry> lrcEntries) {
-                if (getFlag() == lrcText) {
-                    onLrcLoaded(lrcEntries);
-                    setFlag(null);
-                }
+                setFlag(lrcText);
+                new AsyncTask<String, Integer, List<LrcEntry>>() {
+                    @Override
+                    protected List<LrcEntry> doInBackground(String... params) {
+                        return LrcEntry.parseLrc(params[0]);
+                    }
+
+                    @Override
+                    protected void onPostExecute(List<LrcEntry> lrcEntries) {
+                        if (getFlag() == lrcText) {
+                            onLrcLoaded(lrcEntries);
+                            setFlag(null);
+                        }
+                    }
+                }.execute(lrcText);
             }
-        };
-        loadLrcTask.execute(lrcText);
+        });
     }
 
     private void onLrcLoaded(List<LrcEntry> entryList) {
@@ -207,7 +221,7 @@ public class LrcView extends View {
             initNextTime();
         }
 
-        postInvalidate();
+        invalidate();
     }
 
     /**
@@ -215,25 +229,30 @@ public class LrcView extends View {
      *
      * @param time 当前播放时间
      */
-    public void updateTime(long time) {
-        // 避免重复绘制
-        if (time < mNextTime) {
-            return;
-        }
-        for (int i = mCurrentLine; i < mLrcEntryList.size(); i++) {
-            if (mLrcEntryList.get(i).getTime() > time) {
-                mNextTime = mLrcEntryList.get(i).getTime();
-                mCurrentLine = (i < 1) ? 0 : (i - 1);
-                newlineOnUI(i);
-                break;
-            } else if (i == mLrcEntryList.size() - 1) {
-                // 最后一行
-                mCurrentLine = mLrcEntryList.size() - 1;
-                mNextTime = Long.MAX_VALUE;
-                newlineOnUI(i);
-                break;
+    public void updateTime(final long time) {
+        runOnUi(new Runnable() {
+            @Override
+            public void run() {
+                // 避免重复绘制
+                if (time < mNextTime) {
+                    return;
+                }
+                for (int i = mCurrentLine; i < mLrcEntryList.size(); i++) {
+                    if (mLrcEntryList.get(i).getTime() > time) {
+                        mNextTime = mLrcEntryList.get(i).getTime();
+                        mCurrentLine = (i < 1) ? 0 : (i - 1);
+                        newlineAnimation(i);
+                        break;
+                    } else if (i == mLrcEntryList.size() - 1) {
+                        // 最后一行
+                        mCurrentLine = mLrcEntryList.size() - 1;
+                        mNextTime = Long.MAX_VALUE;
+                        newlineAnimation(i);
+                        break;
+                    }
+                }
             }
-        }
+        });
     }
 
     /**
@@ -241,20 +260,25 @@ public class LrcView extends View {
      *
      * @param time 指定的时间
      */
-    public void onDrag(long time) {
-        for (int i = 0; i < mLrcEntryList.size(); i++) {
-            if (mLrcEntryList.get(i).getTime() > time) {
-                if (i == 0) {
-                    mCurrentLine = i;
-                    initNextTime();
-                } else {
-                    mCurrentLine = i - 1;
-                    mNextTime = mLrcEntryList.get(i).getTime();
+    public void onDrag(final long time) {
+        runOnUi(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < mLrcEntryList.size(); i++) {
+                    if (mLrcEntryList.get(i).getTime() > time) {
+                        if (i == 0) {
+                            mCurrentLine = i;
+                            initNextTime();
+                        } else {
+                            mCurrentLine = i - 1;
+                            mNextTime = mLrcEntryList.get(i).getTime();
+                        }
+                        newlineAnimation(i);
+                        break;
+                    }
                 }
-                newlineOnUI(i);
-                break;
             }
-        }
+        });
     }
 
     /**
@@ -272,7 +296,7 @@ public class LrcView extends View {
         mNextTime = 0L;
 
         stopAnimation();
-        postInvalidate();
+        invalidate();
     }
 
     private void initEntryList() {
@@ -293,15 +317,6 @@ public class LrcView extends View {
         } else {
             mNextTime = Long.MAX_VALUE;
         }
-    }
-
-    private void newlineOnUI(final int index) {
-        post(new Runnable() {
-            @Override
-            public void run() {
-                newlineAnimation(index);
-            }
-        });
     }
 
     /**
@@ -330,11 +345,19 @@ public class LrcView extends View {
         }
     }
 
-    public Object getFlag() {
+    private void runOnUi(Runnable r) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            r.run();
+        } else {
+            post(r);
+        }
+    }
+
+    private Object getFlag() {
         return mFlag;
     }
 
-    public void setFlag(Object flag) {
+    private void setFlag(Object flag) {
         this.mFlag = flag;
     }
 }

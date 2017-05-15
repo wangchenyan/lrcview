@@ -1,5 +1,6 @@
 package me.wcy.lrcviewsample;
 
+import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -35,8 +36,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         AssetManager am = getAssets();
         try {
             mediaPlayer.reset();
-            mediaPlayer.setDataSource(am.openFd("cbg.mp3").getFileDescriptor());
-            mediaPlayer.prepare();
+            AssetFileDescriptor fileDescriptor = am.openFd("cbg.mp3");
+            mediaPlayer.setDataSource(fileDescriptor.getFileDescriptor(), fileDescriptor.getStartOffset(), fileDescriptor.getLength());
+            mediaPlayer.prepareAsync();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -9,10 +9,10 @@ ext {
     libraryVersion = rootProject.ext.versionName
     libraryDescription = 'A lyric view on Android'
 
-    siteUrl = 'https://github.com/ChanWong21/LrcView'
-    gitUrl = 'https://github.com/ChanWong21/LrcView.git'
+    siteUrl = 'https://github.com/wangchenyan/LrcView'
+    gitUrl = 'https://github.com/wangchenyan/LrcView.git'
 
-    developerId = 'ChanWong21'
+    developerId = 'wangchenyan'
     developerName = 'wcy'
     developerEmail = '919247701@qq.com'
 
@@ -21,11 +21,16 @@ ext {
     allLicenses = ["Apache-2.0"]
 }
 
-apply from: 'https://raw.githubusercontent.com/ChanWong21/JCenter/master/installv1.gradle'
-apply from: 'https://raw.githubusercontent.com/ChanWong21/JCenter/master/bintrayv1.gradle'
+apply from: 'installv1.gradle'
+apply from: 'bintrayv1.gradle'
 
-task jcenter {
-    dependsOn("bintrayUpload")
+project.afterEvaluate {
+    Task install = tasks.getByPath("install")
+    Task bintrayUpload = tasks.getByPath("bintrayUpload");
+    bintrayUpload.mustRunAfter install
 }
 
-jcenter.dependsOn("install")
+task jcenter {
+    dependsOn("install")
+    dependsOn("bintrayUpload")
+}
