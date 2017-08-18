@@ -28,7 +28,6 @@ import java.util.List;
 public class LrcView extends View {
     private List<LrcEntry> mLrcEntryList = new ArrayList<>();
     private TextPaint mPaint = new TextPaint();
-    private float mTextSize;
     private float mDividerHeight;
     private long mAnimationDuration;
     private int mNormalColor;
@@ -56,7 +55,7 @@ public class LrcView extends View {
 
     private void init(AttributeSet attrs) {
         TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.LrcView);
-        mTextSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, LrcUtils.sp2px(getContext(), 12));
+        float textSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, LrcUtils.sp2px(getContext(), 12));
         mDividerHeight = ta.getDimension(R.styleable.LrcView_lrcDividerHeight, LrcUtils.dp2px(getContext(), 16));
         mAnimationDuration = ta.getInt(R.styleable.LrcView_lrcAnimationDuration, 1000);
         mAnimationDuration = (mAnimationDuration < 0) ? 1000 : mAnimationDuration;
@@ -68,7 +67,7 @@ public class LrcView extends View {
         ta.recycle();
 
         mPaint.setAntiAlias(true);
-        mPaint.setTextSize(mTextSize);
+        mPaint.setTextSize(textSize);
         mPaint.setTextAlign(Paint.Align.LEFT);
     }
 
@@ -94,19 +93,19 @@ public class LrcView extends View {
             @SuppressLint("DrawAllocation")
             StaticLayout staticLayout = new StaticLayout(mLabel, mPaint, (int) getLrcWidth(),
                     Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
-            drawText(canvas, staticLayout, centerY - staticLayout.getLineCount() * mTextSize / 2);
+            drawText(canvas, staticLayout, centerY - staticLayout.getHeight() / 2);
             return;
         }
 
         // 画当前行
-        float currY = centerY - mLrcEntryList.get(mCurrentLine).getTextHeight() / 2;
+        float currY = centerY - mLrcEntryList.get(mCurrentLine).getHeight() / 2;
         drawText(canvas, mLrcEntryList.get(mCurrentLine).getStaticLayout(), currY);
 
         // 画当前行上面的
         mPaint.setColor(mNormalColor);
         float upY = currY;
         for (int i = mCurrentLine - 1; i >= 0; i--) {
-            upY -= mDividerHeight + mLrcEntryList.get(i).getTextHeight();
+            upY -= mDividerHeight + mLrcEntryList.get(i).getHeight();
             drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), upY);
 
             if (upY <= 0) {
@@ -115,15 +114,15 @@ public class LrcView extends View {
         }
 
         // 画当前行下面的
-        float downY = currY + mLrcEntryList.get(mCurrentLine).getTextHeight() + mDividerHeight;
+        float downY = currY + mLrcEntryList.get(mCurrentLine).getHeight() + mDividerHeight;
         for (int i = mCurrentLine + 1; i < mLrcEntryList.size(); i++) {
             drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), downY);
 
-            if (downY + mLrcEntryList.get(i).getTextHeight() >= getHeight()) {
+            if (downY + mLrcEntryList.get(i).getHeight() >= getHeight()) {
                 break;
             }
 
-            downY += mLrcEntryList.get(i).getTextHeight() + mDividerHeight;
+            downY += mLrcEntryList.get(i).getHeight() + mDividerHeight;
         }
     }
 
@@ -241,13 +240,13 @@ public class LrcView extends View {
                     if (mLrcEntryList.get(i).getTime() > time) {
                         mNextTime = mLrcEntryList.get(i).getTime();
                         mCurrentLine = (i < 1) ? 0 : (i - 1);
-                        newlineAnimation(i);
+                        newline(i, true);
                         break;
                     } else if (i == mLrcEntryList.size() - 1) {
                         // 最后一行
                         mCurrentLine = mLrcEntryList.size() - 1;
                         mNextTime = Long.MAX_VALUE;
-                        newlineAnimation(i);
+                        newline(i, true);
                         break;
                     }
                 }
@@ -273,7 +272,7 @@ public class LrcView extends View {
                             mCurrentLine = i - 1;
                             mNextTime = mLrcEntryList.get(i).getTime();
                         }
-                        newlineAnimation(i);
+                        newline(i, false);
                         break;
                     }
                 }
@@ -323,11 +322,20 @@ public class LrcView extends View {
      * 换行动画<br>
      * 属性动画只能在主线程使用
      */
-    private void newlineAnimation(int index) {
+    private void newline(int line, boolean animate) {
         stopAnimation();
 
-        mAnimator = ValueAnimator.ofFloat(mLrcEntryList.get(index).getTextHeight() + mDividerHeight, 0.0f);
-        mAnimator.setDuration(mAnimationDuration * mLrcEntryList.get(index).getStaticLayout().getLineCount());
+        if (line <= 0 || !animate) {
+            invalidate();
+            return;
+        }
+
+        float prevHeight = mLrcEntryList.get(line - 1).getHeight();
+        float currHeight = mLrcEntryList.get(line).getHeight();
+        float totalOffset = (prevHeight + currHeight) / 2 + mDividerHeight;
+
+        mAnimator = ValueAnimator.ofFloat(totalOffset, 0.0f);
+        mAnimator.setDuration(mAnimationDuration * mLrcEntryList.get(line).getStaticLayout().getLineCount());
         mAnimator.setInterpolator(new LinearInterpolator());
         mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override

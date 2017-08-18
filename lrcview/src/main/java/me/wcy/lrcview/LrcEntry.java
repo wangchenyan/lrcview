@@ -24,7 +24,6 @@ class LrcEntry implements Comparable<LrcEntry> {
     private long time;
     private String text;
     private StaticLayout staticLayout;
-    private TextPaint paint;
 
     private LrcEntry(long time, String text) {
         this.time = time;
@@ -32,7 +31,6 @@ class LrcEntry implements Comparable<LrcEntry> {
     }
 
     void init(TextPaint paint, int width) {
-        this.paint = paint;
         staticLayout = new StaticLayout(text, paint, width, Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
     }
 
@@ -44,11 +42,11 @@ class LrcEntry implements Comparable<LrcEntry> {
         return staticLayout;
     }
 
-    float getTextHeight() {
-        if (paint == null || staticLayout == null) {
+    int getHeight() {
+        if (staticLayout == null) {
             return 0;
         }
-        return staticLayout.getLineCount() * paint.getTextSize();
+        return staticLayout.getHeight();
     }
 
     @Override
