@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="lrc_text_size">12sp</dimen>
+    <dimen name="lrc_divider_height">16dp</dimen>
+    <integer name="lrc_animation_duration">1000</integer>
+</resources>

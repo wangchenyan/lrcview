@@ -55,20 +55,31 @@ public class LrcView extends View {
 
     private void init(AttributeSet attrs) {
         TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.LrcView);
-        float textSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, LrcUtils.sp2px(getContext(), 12));
-        mDividerHeight = ta.getDimension(R.styleable.LrcView_lrcDividerHeight, LrcUtils.dp2px(getContext(), 16));
-        mAnimationDuration = ta.getInt(R.styleable.LrcView_lrcAnimationDuration, 1000);
-        mAnimationDuration = (mAnimationDuration < 0) ? 1000 : mAnimationDuration;
-        mNormalColor = ta.getColor(R.styleable.LrcView_lrcNormalTextColor, 0xFFFFFFFF);
-        mCurrentColor = ta.getColor(R.styleable.LrcView_lrcCurrentTextColor, 0xFFFF4081);
+        float textSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, getContext().getResources().getDimension(R.dimen.lrc_text_size));
+        mDividerHeight = ta.getDimension(R.styleable.LrcView_lrcDividerHeight, getContext().getResources().getDimension(R.dimen.lrc_divider_height));
+        int defDuration = getContext().getResources().getInteger(R.integer.lrc_animation_duration);
+        mAnimationDuration = ta.getInt(R.styleable.LrcView_lrcAnimationDuration, defDuration);
+        mAnimationDuration = (mAnimationDuration < 0) ? defDuration : mAnimationDuration;
+        mNormalColor = ta.getColor(R.styleable.LrcView_lrcNormalTextColor, getContext().getResources().getColor(R.color.lrc_normal_text_color));
+        mCurrentColor = ta.getColor(R.styleable.LrcView_lrcCurrentTextColor, getContext().getResources().getColor(R.color.lrc_current_text_color));
         mLabel = ta.getString(R.styleable.LrcView_lrcLabel);
-        mLabel = TextUtils.isEmpty(mLabel) ? "暂无歌词" : mLabel;
+        mLabel = TextUtils.isEmpty(mLabel) ? getContext().getString(R.string.lrc_label) : mLabel;
         mLrcPadding = ta.getDimension(R.styleable.LrcView_lrcPadding, 0);
         ta.recycle();
 
         mPaint.setAntiAlias(true);
         mPaint.setTextSize(textSize);
         mPaint.setTextAlign(Paint.Align.LEFT);
+    }
+
+    public void setNormalColor(int normalColor) {
+        mNormalColor = normalColor;
+        postInvalidate();
+    }
+
+    public void setCurrentColor(int currentColor) {
+        mCurrentColor = currentColor;
+        postInvalidate();
     }
 
     @Override

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="lrc_normal_text_color">#FFFFFF</color>
+    <color name="lrc_current_text_color">#FF4081</color>
+</resources>
