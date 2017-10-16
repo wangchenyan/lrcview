@@ -49,7 +49,7 @@ bintray {
         websiteUrl = siteUrl
         vcsUrl = gitUrl
         licenses = allLicenses
-        publish = true
+        publish = false
         publicDownloadNumbers = true
         version {
             desc = libraryDescription
