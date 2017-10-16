@@ -16,7 +16,7 @@
 * 有问题请提Issues
 
 ## 简介
-Android歌词控件，支持自动滚动，超长歌词自动换行，自定义属性。
+Android歌词控件，支持自动滚动，超长歌词自动换行，自定义属性。<br>
 ![](https://raw.githubusercontent.com/wangchenyan/LrcView/master/art/screenshot.gif)
 
 ## 更新说明
@@ -65,6 +65,8 @@ compile 'me.wcy:lrcview:latestVersion'
 | setLabel(String) | 设置歌词为空时屏幕中央显示的文字，如“暂无歌词” |
 | updateTime(long) | 刷新歌词（适用于正常播放） |
 | onDrag(long) | 将歌词滚动到指定时间（适用于拖拽进度条） |
+| setNormalColor(int) | 设置非当前行歌词字体颜色 |
+| setCurrentColor(int) | 设置当前行歌词字体颜色 |
 
 ## 思路分析
 首先，当前播放的那一行应该在视图中央，且高亮显示，然后是当前行以前的在上面，当前行以后的在下面，所以我们的绘制流程是先绘制当前行，然后依次绘制上面的和下面的。
