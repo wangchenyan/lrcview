@@ -36,7 +36,7 @@ public class LrcView extends View {
     private float mLrcPadding;
     private ValueAnimator mAnimator;
     private float mOffset;
-    private int mCurrentLine = 0;
+    private int mCurrentLine;
     private Object mFlag;
 
     public LrcView(Context context) {
@@ -91,8 +91,6 @@ public class LrcView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        canvas.translate(0, mOffset);
-
         // 无歌词文件
         if (!hasLrc()) {
             mPaint.setColor(mCurrentColor);
@@ -102,6 +100,8 @@ public class LrcView extends View {
             drawText(canvas, staticLayout, getHeight() / 2);
             return;
         }
+
+        canvas.translate(0, mOffset);
 
         float y = 0;
         for (int i = 0; i < mLrcEntryList.size(); i++) {
@@ -275,6 +275,7 @@ public class LrcView extends View {
     private void reset() {
         endAnimation();
         mLrcEntryList.clear();
+        mOffset = 0;
         mCurrentLine = 0;
         invalidate();
     }
