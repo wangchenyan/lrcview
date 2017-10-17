@@ -24,6 +24,7 @@ class LrcEntry implements Comparable<LrcEntry> {
     private long time;
     private String text;
     private StaticLayout staticLayout;
+    private int offset = Integer.MIN_VALUE;
 
     private LrcEntry(long time, String text) {
         this.time = time;
@@ -47,6 +48,14 @@ class LrcEntry implements Comparable<LrcEntry> {
             return 0;
         }
         return staticLayout.getHeight();
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
     @Override

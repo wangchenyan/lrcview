@@ -40,6 +40,12 @@
         app:lrcPadding="100dp"
         app:lrcTextSize="12sp" />
 
+    <SeekBar
+        android:id="@+id/progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+
     <Button
         android:id="@+id/btn_play_pause"
         android:layout_width="match_parent"
