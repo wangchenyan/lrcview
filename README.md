@@ -22,6 +22,7 @@ Android歌词控件，支持自动滚动，超长歌词自动换行，自定义�
 ## 更新说明
 `v 1.4`
 * 解析歌词放在工作线程中
+* 优化多行歌词时动画不流畅
 
 `v 1.3`
 * 支持多个时间标签
@@ -63,8 +64,8 @@ compile 'me.wcy:lrcview:latestVersion'
 | loadLrc(File) | 加载歌词文件 |
 | loadLrc(String) | 加载歌词文本 |
 | setLabel(String) | 设置歌词为空时屏幕中央显示的文字，如“暂无歌词” |
-| updateTime(long) | 刷新歌词（适用于正常播放） |
-| onDrag(long) | 将歌词滚动到指定时间（适用于拖拽进度条） |
+| updateTime(long) | 刷新歌词 |
+| ~~onDrag(long)~~ | ~~将歌词滚动到指定时间，已弃用，请使用 updateTime(long) 代替~~ |
 | setNormalColor(int) | 设置非当前行歌词字体颜色 |
 | setCurrentColor(int) | 设置当前行歌词字体颜色 |
 
@@ -79,71 +80,56 @@ compile 'me.wcy:lrcview:latestVersion'
 
 ## 代码实现
 **绘制过程**
+onDraw 中将歌词文本绘出，mOffset 是当前应该滚动的距离
 ```
 @Override
 protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
 
-    canvas.translate(0, mAnimateOffset);
-
-    // 中心Y坐标
-    float centerY = getHeight() / 2;
-
-    mPaint.setColor(mCurrentColor);
+    canvas.translate(0, mOffset);
 
     // 无歌词文件
     if (!hasLrc()) {
+        mPaint.setColor(mCurrentColor);
         @SuppressLint("DrawAllocation")
         StaticLayout staticLayout = new StaticLayout(mLabel, mPaint, (int) getLrcWidth(),
-                Layout.Alignment.ALIGN_NORMAL, 1f, 0f, false);
-        drawText(canvas, staticLayout, centerY - staticLayout.getLineCount() * mTextSize / 2);
+                Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
+        drawText(canvas, staticLayout, getHeight() / 2);
         return;
     }
 
-    // 画当前行
-    float currY = centerY - mLrcEntryList.get(mCurrentLine).getTextHeight() / 2;
-    drawText(canvas, mLrcEntryList.get(mCurrentLine).getStaticLayout(), currY);
-
-    // 画当前行上面的
-    mPaint.setColor(mNormalColor);
-    float upY = currY;
-    for (int i = mCurrentLine - 1; i >= 0; i--) {
-        upY -= mDividerHeight + mLrcEntryList.get(i).getTextHeight();
-
-        if (mAnimator == null || !mAnimator.isRunning()) {
-            // 动画已经结束，超出屏幕停止绘制
-            if (upY < 0) {
-                break;
-            }
+    float y = 0;
+    for (int i = 0; i < mLrcEntryList.size(); i++) {
+        if (i > 0) {
+            y += (mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) / 2 + mDividerHeight;
         }
-
-        drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), upY);
-
-        // 动画未结束，超出屏幕多绘制一行
-        if (upY < 0) {
-            break;
-        }
+        mPaint.setColor((i == mCurrentLine) ? mCurrentColor : mNormalColor);
+        drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), y);
     }
+}
+```
+换行时根据该行应该滚动的距离做动画
+```
+/**
+ * 换行动画<br>
+ * 属性动画只能在主线程使用
+ */
+private void newline(int line) {
+    endAnimation();
 
-    // 画当前行下面的
-    float downY = currY + mLrcEntryList.get(mCurrentLine).getTextHeight() + mDividerHeight;
-    for (int i = mCurrentLine + 1; i < mLrcEntryList.size(); i++) {
-        if (mAnimator == null || !mAnimator.isRunning()) {
-            // 动画已经结束，超出屏幕停止绘制
-            if (downY + mLrcEntryList.get(i).getTextHeight() > getHeight()) {
-                break;
-            }
+    int offset = getOffset(line);
+
+    mAnimator = ValueAnimator.ofFloat(mOffset, offset);
+    mAnimator.setDuration(mAnimationDuration);
+    mAnimator.setInterpolator(new LinearInterpolator());
+    mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        @Override
+        public void onAnimationUpdate(ValueAnimator animation) {
+            mOffset = (float) animation.getAnimatedValue();
+            invalidate();
         }
-
-        drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), downY);
-
-        // 动画未结束，超出屏幕多绘制一行
-        if (downY + mLrcEntryList.get(i).getTextHeight() > getHeight()) {
-            break;
-        }
-
-        downY += mLrcEntryList.get(i).getTextHeight() + mDividerHeight;
-    }
+    });
+    mAnimator.start();
 }
 ```
 
