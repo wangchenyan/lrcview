@@ -6,15 +6,20 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Looper;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
+import android.widget.Scroller;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,18 +31,47 @@ import java.util.List;
  * Created by wcy on 2015/11/9.
  */
 public class LrcView extends View {
+    private static final long ADJUST_DURATION = 100;
+    private static final long TIMELINE_KEEP_TIME = 4 * DateUtils.SECOND_IN_MILLIS;
+
     private List<LrcEntry> mLrcEntryList = new ArrayList<>();
-    private TextPaint mPaint = new TextPaint();
+    private TextPaint mLrcPaint = new TextPaint();
+    private TextPaint mTimePaint = new TextPaint();
+    private Paint.FontMetrics mTimeFontMetrics;
+    private Drawable mPlayDrawable;
     private float mDividerHeight;
     private long mAnimationDuration;
-    private int mNormalColor;
-    private int mCurrentColor;
-    private String mLabel;
+    private int mNormalTextColor;
+    private int mCurrentTextColor;
+    private int mTimelineTextColor;
+    private int mTimelineColor;
+    private int mTimeTextColor;
+    private int mDrawableWidth;
+    private int mTimeTextWidth;
+    private String mDefaultLabel;
     private float mLrcPadding;
+    private OnSeekListener mOnSeekListener;
     private ValueAnimator mAnimator;
+    private GestureDetector mGestureDetector;
+    private Scroller mScroller;
     private float mOffset;
     private int mCurrentLine;
     private Object mFlag;
+    private boolean isShowTimeline;
+    private boolean isTouching;
+    private boolean isFling;
+
+    /**
+     * 歌词滚动监听器
+     */
+    public interface OnSeekListener {
+        /**
+         * 歌词滚动指定时间
+         *
+         * @return 是否成功消费该事件，如果成功消费，则会更新UI
+         */
+        boolean onSeek(long time);
+    }
 
     public LrcView(Context context) {
         this(context, null);
@@ -54,75 +88,71 @@ public class LrcView extends View {
 
     private void init(AttributeSet attrs) {
         TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.LrcView);
-        float textSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, getContext().getResources().getDimension(R.dimen.lrc_text_size));
-        mDividerHeight = ta.getDimension(R.styleable.LrcView_lrcDividerHeight, getContext().getResources().getDimension(R.dimen.lrc_divider_height));
-        int defDuration = getContext().getResources().getInteger(R.integer.lrc_animation_duration);
+        float lrcTextSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, getResources().getDimension(R.dimen.lrc_text_size));
+        mDividerHeight = ta.getDimension(R.styleable.LrcView_lrcDividerHeight, getResources().getDimension(R.dimen.lrc_divider_height));
+        int defDuration = getResources().getInteger(R.integer.lrc_animation_duration);
         mAnimationDuration = ta.getInt(R.styleable.LrcView_lrcAnimationDuration, defDuration);
         mAnimationDuration = (mAnimationDuration < 0) ? defDuration : mAnimationDuration;
-        mNormalColor = ta.getColor(R.styleable.LrcView_lrcNormalTextColor, getContext().getResources().getColor(R.color.lrc_normal_text_color));
-        mCurrentColor = ta.getColor(R.styleable.LrcView_lrcCurrentTextColor, getContext().getResources().getColor(R.color.lrc_current_text_color));
-        mLabel = ta.getString(R.styleable.LrcView_lrcLabel);
-        mLabel = TextUtils.isEmpty(mLabel) ? getContext().getString(R.string.lrc_label) : mLabel;
+        mNormalTextColor = ta.getColor(R.styleable.LrcView_lrcNormalTextColor, getResources().getColor(R.color.lrc_normal_text_color));
+        mCurrentTextColor = ta.getColor(R.styleable.LrcView_lrcCurrentTextColor, getResources().getColor(R.color.lrc_current_text_color));
+        mTimelineTextColor = ta.getColor(R.styleable.LrcView_lrcTimelineTextColor, getResources().getColor(R.color.lrc_timeline_text_color));
+        mDefaultLabel = ta.getString(R.styleable.LrcView_lrcLabel);
+        mDefaultLabel = TextUtils.isEmpty(mDefaultLabel) ? getContext().getString(R.string.lrc_label) : mDefaultLabel;
         mLrcPadding = ta.getDimension(R.styleable.LrcView_lrcPadding, 0);
+        mTimelineColor = ta.getColor(R.styleable.LrcView_lrcTimelineColor, getResources().getColor(R.color.lrc_timeline_color));
+        float timelineHeight = ta.getDimension(R.styleable.LrcView_lrcTimelineHeight, getResources().getDimension(R.dimen.lrc_timeline_height));
+        mPlayDrawable = ta.getDrawable(R.styleable.LrcView_lrcPlayDrawable);
+        mPlayDrawable = (mPlayDrawable == null) ? getResources().getDrawable(R.drawable.lrc_play) : mPlayDrawable;
+        mTimeTextColor = ta.getColor(R.styleable.LrcView_lrcTimeTextColor, getResources().getColor(R.color.lrc_time_text_color));
+        float timeTextSize = ta.getDimension(R.styleable.LrcView_lrcTimeTextSize, getResources().getDimension(R.dimen.lrc_time_text_size));
         ta.recycle();
 
-        mPaint.setAntiAlias(true);
-        mPaint.setTextSize(textSize);
-        mPaint.setTextAlign(Paint.Align.LEFT);
+        mDrawableWidth = (int) getResources().getDimension(R.dimen.lrc_drawable_width);
+        mTimeTextWidth = (int) getResources().getDimension(R.dimen.lrc_time_width);
+
+        mLrcPaint.setAntiAlias(true);
+        mLrcPaint.setTextSize(lrcTextSize);
+        mLrcPaint.setTextAlign(Paint.Align.LEFT);
+        mTimePaint.setAntiAlias(true);
+        mTimePaint.setTextSize(timeTextSize);
+        mTimePaint.setTextAlign(Paint.Align.CENTER);
+        //noinspection SuspiciousNameCombination
+        mTimePaint.setStrokeWidth(timelineHeight);
+        mTimePaint.setStrokeCap(Paint.Cap.ROUND);
+        mTimeFontMetrics = mTimePaint.getFontMetrics();
+
+        mGestureDetector = new GestureDetector(getContext(), mSimpleOnGestureListener);
+        mGestureDetector.setIsLongpressEnabled(false);
+        mScroller = new Scroller(getContext());
     }
 
     public void setNormalColor(int normalColor) {
-        mNormalColor = normalColor;
+        mNormalTextColor = normalColor;
         postInvalidate();
     }
 
     public void setCurrentColor(int currentColor) {
-        mCurrentColor = currentColor;
+        mCurrentTextColor = currentColor;
         postInvalidate();
     }
 
-    @Override
-    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        super.onLayout(changed, left, top, right, bottom);
-        initEntryList();
+    public void setTimelineTextColor(int timelineTextColor) {
+        mTimelineTextColor = timelineTextColor;
+        postInvalidate();
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        // 无歌词文件
-        if (!hasLrc()) {
-            mPaint.setColor(mCurrentColor);
-            @SuppressLint("DrawAllocation")
-            StaticLayout staticLayout = new StaticLayout(mLabel, mPaint, (int) getLrcWidth(),
-                    Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
-            drawText(canvas, staticLayout, getHeight() / 2);
-            return;
-        }
-
-        canvas.translate(0, mOffset);
-
-        float y = 0;
-        for (int i = 0; i < mLrcEntryList.size(); i++) {
-            if (i > 0) {
-                y += (mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) / 2 + mDividerHeight;
-            }
-            mPaint.setColor((i == mCurrentLine) ? mCurrentColor : mNormalColor);
-            drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), y);
-        }
+    public void setTimelineColor(int timelineColor) {
+        mTimelineColor = timelineColor;
+        postInvalidate();
     }
 
-    /**
-     * 画一行歌词
-     *
-     * @param y 歌词中心 Y 坐标
-     */
-    private void drawText(Canvas canvas, StaticLayout staticLayout, float y) {
-        canvas.save();
-        canvas.translate(mLrcPadding, y - staticLayout.getHeight() / 2);
-        staticLayout.draw(canvas);
-        canvas.restore();
+    public void setmTimeTextColor(int timeTextColor) {
+        mTimeTextColor = timeTextColor;
+        postInvalidate();
+    }
+
+    public void setOnSeekListener(OnSeekListener onSeekListener) {
+        mOnSeekListener = onSeekListener;
     }
 
     /**
@@ -132,7 +162,7 @@ public class LrcView extends View {
         runOnUi(new Runnable() {
             @Override
             public void run() {
-                mLabel = label;
+                mDefaultLabel = label;
                 invalidate();
             }
         });
@@ -198,13 +228,13 @@ public class LrcView extends View {
         });
     }
 
-    private void onLrcLoaded(List<LrcEntry> entryList) {
-        if (entryList != null && !entryList.isEmpty()) {
-            mLrcEntryList.addAll(entryList);
-        }
-
-        initEntryList();
-        invalidate();
+    /**
+     * 歌词是否有效
+     *
+     * @return true，如果歌词有效，否则false
+     */
+    public boolean hasLrc() {
+        return !mLrcEntryList.isEmpty();
     }
 
     /**
@@ -223,7 +253,11 @@ public class LrcView extends View {
                 int line = findShowLine(time);
                 if (line != mCurrentLine) {
                     mCurrentLine = line;
-                    newline(line);
+                    if (!isShowTimeline) {
+                        scrollTo(line);
+                    } else {
+                        invalidate();
+                    }
                 }
             }
         });
@@ -235,12 +269,247 @@ public class LrcView extends View {
      * @param time 指定的时间
      * @deprecated 请使用 {@link #updateTime(long)} 代替
      */
+    @Deprecated
     public void onDrag(long time) {
         updateTime(time);
     }
 
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        if (changed) {
+            initEntryList();
+            int l = (mTimeTextWidth - mDrawableWidth) / 2;
+            int t = getHeight() / 2 - mDrawableWidth / 2;
+            int r = l + mDrawableWidth;
+            int b = t + mDrawableWidth;
+            mPlayDrawable.setBounds(l, t, r, b);
+        }
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        int centerY = getHeight() / 2;
+
+        // 无歌词文件
+        if (!hasLrc()) {
+            mLrcPaint.setColor(mCurrentTextColor);
+            @SuppressLint("DrawAllocation")
+            StaticLayout staticLayout = new StaticLayout(mDefaultLabel, mLrcPaint, (int) getLrcWidth(),
+                    Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
+            drawText(canvas, staticLayout, centerY);
+            return;
+        }
+
+        int centerLine = getCenterLine();
+
+        if (isShowTimeline) {
+            mPlayDrawable.draw(canvas);
+
+            mTimePaint.setColor(mTimelineColor);
+            canvas.drawLine(mTimeTextWidth, centerY, getWidth() - mTimeTextWidth, centerY, mTimePaint);
+
+            mTimePaint.setColor(mTimeTextColor);
+            String timeText = LrcUtils.formatTime(mLrcEntryList.get(centerLine).getTime());
+            float timeX = getWidth() - mTimeTextWidth / 2;
+            float timeY = centerY - (mTimeFontMetrics.descent + mTimeFontMetrics.ascent) / 2;
+            canvas.drawText(timeText, timeX, timeY, mTimePaint);
+        }
+
+        canvas.translate(0, mOffset);
+
+        float y = 0;
+        for (int i = 0; i < mLrcEntryList.size(); i++) {
+            if (i > 0) {
+                y += (mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) / 2 + mDividerHeight;
+            }
+            if (i == mCurrentLine) {
+                mLrcPaint.setColor(mCurrentTextColor);
+            } else if (isShowTimeline && i == centerLine) {
+                mLrcPaint.setColor(mTimelineTextColor);
+            } else {
+                mLrcPaint.setColor(mNormalTextColor);
+            }
+            drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), y);
+        }
+    }
+
     /**
-     * 二分法查找当前应该显示的行数（最后一个 <= time 的行数）
+     * 画一行歌词
+     *
+     * @param y 歌词中心 Y 坐标
+     */
+    private void drawText(Canvas canvas, StaticLayout staticLayout, float y) {
+        canvas.save();
+        canvas.translate(mLrcPadding, y - staticLayout.getHeight() / 2);
+        staticLayout.draw(canvas);
+        canvas.restore();
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            isTouching = false;
+            if (!isFling) {
+                adjustCenter();
+                postDelayed(hideTimelineRunnable, TIMELINE_KEEP_TIME);
+            }
+        }
+        return mGestureDetector.onTouchEvent(event);
+    }
+
+    private GestureDetector.SimpleOnGestureListener mSimpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
+        @Override
+        public boolean onDown(MotionEvent e) {
+            if (hasLrc() && mOnSeekListener != null) {
+                mScroller.forceFinished(true);
+                removeCallbacks(hideTimelineRunnable);
+                isTouching = true;
+                isShowTimeline = true;
+                invalidate();
+                return true;
+            }
+            return super.onDown(e);
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            mOffset += -distanceY;
+            mOffset = Math.min(mOffset, getOffset(0));
+            mOffset = Math.max(mOffset, getOffset(mLrcEntryList.size() - 1));
+            invalidate();
+            return true;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            mScroller.fling(0, (int) mOffset, 0, (int) velocityY, 0, 0, (int) getOffset(mLrcEntryList.size() - 1), (int) getOffset(0));
+            isFling = true;
+            return true;
+        }
+
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            if (isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
+                int centerLine = getCenterLine();
+                long centerLineTime = mLrcEntryList.get(centerLine).getTime();
+                // onSeek 消费了才更新 UI
+                if (mOnSeekListener != null && mOnSeekListener.onSeek(centerLineTime)) {
+                    isShowTimeline = false;
+                    removeCallbacks(hideTimelineRunnable);
+                    mCurrentLine = centerLine;
+                    invalidate();
+                    return true;
+                }
+            }
+            return super.onSingleTapConfirmed(e);
+        }
+    };
+
+    private Runnable hideTimelineRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isShowTimeline) {
+                isShowTimeline = false;
+                scrollTo(mCurrentLine);
+            }
+        }
+    };
+
+    @Override
+    public void computeScroll() {
+        if (mScroller.computeScrollOffset()) {
+            mOffset = mScroller.getCurrY();
+            invalidate();
+        }
+
+        if (isFling && mScroller.isFinished()) {
+            isFling = false;
+            if (!isTouching) {
+                adjustCenter();
+                postDelayed(hideTimelineRunnable, TIMELINE_KEEP_TIME);
+            }
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        removeCallbacks(hideTimelineRunnable);
+        super.onDetachedFromWindow();
+    }
+
+    private void onLrcLoaded(List<LrcEntry> entryList) {
+        if (entryList != null && !entryList.isEmpty()) {
+            mLrcEntryList.addAll(entryList);
+        }
+
+        initEntryList();
+        invalidate();
+    }
+
+    private void initEntryList() {
+        if (!hasLrc() || getWidth() == 0) {
+            return;
+        }
+
+        Collections.sort(mLrcEntryList);
+
+        for (LrcEntry lrcEntry : mLrcEntryList) {
+            lrcEntry.init(mLrcPaint, (int) getLrcWidth());
+        }
+
+        mOffset = getHeight() / 2;
+    }
+
+    private void reset() {
+        endAnimation();
+        mLrcEntryList.clear();
+        mOffset = 0;
+        mCurrentLine = 0;
+        invalidate();
+    }
+
+    /**
+     * 滚动到某一行
+     */
+    private void scrollTo(int line) {
+        scrollTo(line, mAnimationDuration);
+    }
+
+    /**
+     * 将中心行微调至正中心
+     */
+    private void adjustCenter() {
+        scrollTo(getCenterLine(), ADJUST_DURATION);
+    }
+
+    private void scrollTo(int line, long duration) {
+        float offset = getOffset(line);
+        endAnimation();
+
+        mAnimator = ValueAnimator.ofFloat(mOffset, offset);
+        mAnimator.setDuration(duration);
+        mAnimator.setInterpolator(new LinearInterpolator());
+        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mOffset = (float) animation.getAnimatedValue();
+                invalidate();
+            }
+        });
+        mAnimator.start();
+    }
+
+    private void endAnimation() {
+        if (mAnimator != null && mAnimator.isRunning()) {
+            mAnimator.end();
+        }
+    }
+
+    /**
+     * 二分法查找当前时间应该显示的行数（最后一个 <= time 的行数）
      */
     private int findShowLine(long time) {
         int left = 0;
@@ -263,68 +532,21 @@ public class LrcView extends View {
         return 0;
     }
 
-    /**
-     * 歌词是否有效
-     *
-     * @return true，如果歌词有效，否则false
-     */
-    public boolean hasLrc() {
-        return !mLrcEntryList.isEmpty();
-    }
-
-    private void reset() {
-        endAnimation();
-        mLrcEntryList.clear();
-        mOffset = 0;
-        mCurrentLine = 0;
-        invalidate();
-    }
-
-    private void initEntryList() {
-        if (!hasLrc() || getWidth() == 0) {
-            return;
-        }
-
-        Collections.sort(mLrcEntryList);
-
-        for (LrcEntry lrcEntry : mLrcEntryList) {
-            lrcEntry.init(mPaint, (int) getLrcWidth());
-        }
-
-        mOffset = getHeight() / 2;
-    }
-
-    /**
-     * 换行动画<br>
-     * 属性动画只能在主线程使用
-     */
-    private void newline(int line) {
-        endAnimation();
-
-        int offset = getOffset(line);
-
-        mAnimator = ValueAnimator.ofFloat(mOffset, offset);
-        mAnimator.setDuration(mAnimationDuration);
-        mAnimator.setInterpolator(new LinearInterpolator());
-        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                mOffset = (float) animation.getAnimatedValue();
-                invalidate();
+    private int getCenterLine() {
+        int centerLine = 0;
+        float minDistance = Float.MAX_VALUE;
+        for (int i = 0; i < mLrcEntryList.size(); i++) {
+            if (Math.abs(mOffset - getOffset(i)) < minDistance) {
+                minDistance = Math.abs(mOffset - getOffset(i));
+                centerLine = i;
             }
-        });
-        mAnimator.start();
-    }
-
-    private void endAnimation() {
-        if (mAnimator != null && mAnimator.isRunning()) {
-            mAnimator.end();
         }
+        return centerLine;
     }
 
-    private int getOffset(int line) {
-        if (mLrcEntryList.get(line).getOffset() == Integer.MIN_VALUE) {
-            int offset = getHeight() / 2;
+    private float getOffset(int line) {
+        if (mLrcEntryList.get(line).getOffset() == Float.MIN_VALUE) {
+            float offset = getHeight() / 2;
             for (int i = 1; i <= line; i++) {
                 offset -= (mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) / 2 + mDividerHeight;
             }

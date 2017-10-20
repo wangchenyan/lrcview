@@ -23,7 +23,8 @@
         app:lrcLabel="找不到歌词(&gt;_&lt;)"
         app:lrcNormalTextColor="@android:color/darker_gray"
         app:lrcPadding="16dp"
-        app:lrcTextSize="16sp" />
+        app:lrcTextSize="16sp"
+        app:lrcTimelineTextColor="#C5CAE9" />
 
     <me.wcy.lrcview.LrcView
         android:id="@+id/lrc_small"
