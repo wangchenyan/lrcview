@@ -151,7 +151,12 @@ public class LrcView extends View {
         postInvalidate();
     }
 
-    public void setOnSeekListener(OnPlayClickListener onPlayClickListener) {
+    /**
+     * 设置播放按钮点击监听器
+     *
+     * @param onPlayClickListener 如果为非 null ，则激活歌词滚动功能，否则将将禁用歌词滚动功能
+     */
+    public void setOnPlayClickListener(OnPlayClickListener onPlayClickListener) {
         mOnPlayClickListener = onPlayClickListener;
     }
 
@@ -352,7 +357,7 @@ public class LrcView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP) {
             isTouching = false;
-            if (!isFling) {
+            if (hasLrc() && !isFling) {
                 adjustCenter();
                 postDelayed(hideTimelineRunnable, TIMELINE_KEEP_TIME);
             }
@@ -376,23 +381,29 @@ public class LrcView extends View {
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            mOffset += -distanceY;
-            mOffset = Math.min(mOffset, getOffset(0));
-            mOffset = Math.max(mOffset, getOffset(mLrcEntryList.size() - 1));
-            invalidate();
-            return true;
+            if (hasLrc()) {
+                mOffset += -distanceY;
+                mOffset = Math.min(mOffset, getOffset(0));
+                mOffset = Math.max(mOffset, getOffset(mLrcEntryList.size() - 1));
+                invalidate();
+                return true;
+            }
+            return super.onScroll(e1, e2, distanceX, distanceY);
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            mScroller.fling(0, (int) mOffset, 0, (int) velocityY, 0, 0, (int) getOffset(mLrcEntryList.size() - 1), (int) getOffset(0));
-            isFling = true;
-            return true;
+            if (hasLrc()) {
+                mScroller.fling(0, (int) mOffset, 0, (int) velocityY, 0, 0, (int) getOffset(mLrcEntryList.size() - 1), (int) getOffset(0));
+                isFling = true;
+                return true;
+            }
+            return super.onFling(e1, e2, velocityX, velocityY);
         }
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
-            if (isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
+            if (hasLrc() && isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
                 int centerLine = getCenterLine();
                 long centerLineTime = mLrcEntryList.get(centerLine).getTime();
                 // onPlayClick 消费了才更新 UI
@@ -411,7 +422,7 @@ public class LrcView extends View {
     private Runnable hideTimelineRunnable = new Runnable() {
         @Override
         public void run() {
-            if (isShowTimeline) {
+            if (hasLrc() && isShowTimeline) {
                 isShowTimeline = false;
                 scrollTo(mCurrentLine);
             }
@@ -427,7 +438,7 @@ public class LrcView extends View {
 
         if (isFling && mScroller.isFinished()) {
             isFling = false;
-            if (!isTouching) {
+            if (hasLrc() && !isTouching) {
                 adjustCenter();
                 postDelayed(hideTimelineRunnable, TIMELINE_KEEP_TIME);
             }
@@ -465,6 +476,11 @@ public class LrcView extends View {
 
     private void reset() {
         endAnimation();
+        mScroller.forceFinished(true);
+        isShowTimeline = false;
+        isTouching = false;
+        isFling = false;
+        removeCallbacks(hideTimelineRunnable);
         mLrcEntryList.clear();
         mOffset = 0;
         mCurrentLine = 0;
