@@ -59,9 +59,9 @@ public class MainActivity extends AppCompatActivity {
         lrcBig.loadLrc(getLrcText("cbg.lrc"));
         lrcSmall.loadLrc(getLrcText("cbg.lrc"));
 
-        lrcBig.setOnSeekListener(new LrcView.OnSeekListener() {
+        lrcBig.setOnSeekListener(new LrcView.OnPlayClickListener() {
             @Override
-            public boolean onSeek(long time) {
+            public boolean onPlayClick(long time) {
                 mediaPlayer.seekTo((int) time);
                 return true;
             }

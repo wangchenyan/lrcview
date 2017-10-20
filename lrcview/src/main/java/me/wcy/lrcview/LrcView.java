@@ -50,7 +50,7 @@ public class LrcView extends View {
     private int mTimeTextWidth;
     private String mDefaultLabel;
     private float mLrcPadding;
-    private OnSeekListener mOnSeekListener;
+    private OnPlayClickListener mOnPlayClickListener;
     private ValueAnimator mAnimator;
     private GestureDetector mGestureDetector;
     private Scroller mScroller;
@@ -62,15 +62,15 @@ public class LrcView extends View {
     private boolean isFling;
 
     /**
-     * 歌词滚动监听器
+     * 播放按钮点击监听器，点击后应该跳转到指定播放位置
      */
-    public interface OnSeekListener {
+    public interface OnPlayClickListener {
         /**
-         * 歌词滚动指定时间
+         * 播放按钮被点击，应该跳转到指定播放位置
          *
          * @return 是否成功消费该事件，如果成功消费，则会更新UI
          */
-        boolean onSeek(long time);
+        boolean onPlayClick(long time);
     }
 
     public LrcView(Context context) {
@@ -151,8 +151,8 @@ public class LrcView extends View {
         postInvalidate();
     }
 
-    public void setOnSeekListener(OnSeekListener onSeekListener) {
-        mOnSeekListener = onSeekListener;
+    public void setOnSeekListener(OnPlayClickListener onPlayClickListener) {
+        mOnPlayClickListener = onPlayClickListener;
     }
 
     /**
@@ -363,7 +363,7 @@ public class LrcView extends View {
     private GestureDetector.SimpleOnGestureListener mSimpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
         @Override
         public boolean onDown(MotionEvent e) {
-            if (hasLrc() && mOnSeekListener != null) {
+            if (hasLrc() && mOnPlayClickListener != null) {
                 mScroller.forceFinished(true);
                 removeCallbacks(hideTimelineRunnable);
                 isTouching = true;
@@ -395,8 +395,8 @@ public class LrcView extends View {
             if (isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
                 int centerLine = getCenterLine();
                 long centerLineTime = mLrcEntryList.get(centerLine).getTime();
-                // onSeek 消费了才更新 UI
-                if (mOnSeekListener != null && mOnSeekListener.onSeek(centerLineTime)) {
+                // onPlayClick 消费了才更新 UI
+                if (mOnPlayClickListener != null && mOnPlayClickListener.onPlayClick(centerLineTime)) {
                     isShowTimeline = false;
                     removeCallbacks(hideTimelineRunnable);
                     mCurrentLine = centerLine;
