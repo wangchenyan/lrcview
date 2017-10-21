@@ -16,7 +16,8 @@
 - 如果喜欢，欢迎Star！
 
 ## 简介
-Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义属性。<br>
+Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义属性。
+
 ![](https://raw.githubusercontent.com/wangchenyan/LrcView/master/art/screenshot.gif)
 
 ## 更新说明
@@ -83,13 +84,14 @@ compile 'me.wcy:lrcview:latestVersion'
 | setTimeTextColor | 设置拖动歌词时右侧时间字体颜色 |
 
 ## 思路分析
-当前播放的那一行应该在视图中央，且高亮显示，计算出每一行位于中央时画布应该滚动的距离。
+正常播放时，当前播放的那一行应该在视图中央，首先计算出每一行位于中央时画布应该滚动的距离。<br>
+将所有歌词按顺序画出，然后将画布滚动的相应的距离，将正在播放的歌词置于屏幕中央。<br>
+歌词滚动时要有动画，使用属性动画即可，我们可以使用当前行和上一行的滚动距离作为动画的起止值。<br>
+多行歌词绘制采用StaticLayout。<br>
 
-将所有歌词按顺序画出，然后将画布滚动的相应的距离，将正在播放的歌词置于屏幕中央。
-
-歌词滚动时要有动画，使用属性动画即可，我们可以根据当前行和上一行的滚动距离来做动画。
-
-多行歌词绘制采用StaticLayout。
+上下拖动时，歌词跟随手指滚动，绘制时间线。<br>
+手指离开屏幕时，一段时间内，如果没有下一步操作，则隐藏时间线，同时将歌词滚动到实际位置，回到正常播放状态；<br>
+如果点击播放按钮，则跳转到指定位置，回到正常播放状态。
 
 ## 代码实现
 onDraw 中将歌词文本绘出，mOffset 是当前应该滚动的距离
@@ -145,18 +147,6 @@ protected void onDraw(Canvas canvas) {
 ```
 手势监听器
 ```
-@Override
-public boolean onTouchEvent(MotionEvent event) {
-    if (event.getAction() == MotionEvent.ACTION_UP) {
-        isTouching = false;
-        if (hasLrc() && !isFling) {
-            adjustCenter();
-            postDelayed(hideTimelineRunnable, TIMELINE_KEEP_TIME);
-        }
-    }
-    return mGestureDetector.onTouchEvent(event);
-}
-
 private GestureDetector.SimpleOnGestureListener mSimpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
     @Override
     public boolean onDown(MotionEvent e) {
@@ -231,7 +221,7 @@ private void scrollTo(int line, long duration) {
 }
 ```
 
-代码比较简单，大家根据注释很容易就能看懂。到这里，我们已经实现了可拖动的歌词控件了。<br>
+代码比较简单，大家根据源码和注释很容易就能看懂。到这里，我们已经实现了可拖动的歌词控件了。<br>
 截图看比较简单，大家可以运行源码或下载[波尼音乐](http://fir.im/ponymusic)查看详细效果。
 
 ## 关于作者
