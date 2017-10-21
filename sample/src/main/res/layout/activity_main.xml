@@ -22,7 +22,7 @@
         app:lrcDividerHeight="24dp"
         app:lrcLabel="找不到歌词(&gt;_&lt;)"
         app:lrcNormalTextColor="@android:color/darker_gray"
-        app:lrcPadding="16dp"
+        app:lrcPadding="40dp"
         app:lrcTextSize="16sp"
         app:lrcTimelineTextColor="#C5CAE9" />
 
