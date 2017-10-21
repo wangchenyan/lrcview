@@ -154,7 +154,7 @@ public class LrcView extends View {
     /**
      * 设置播放按钮点击监听器
      *
-     * @param onPlayClickListener 如果为非 null ，则激活歌词滚动功能，否则将将禁用歌词滚动功能
+     * @param onPlayClickListener 如果为非 null ，则激活歌词拖动功能，否则将将禁用歌词拖动功能
      */
     public void setOnPlayClickListener(OnPlayClickListener onPlayClickListener) {
         mOnPlayClickListener = onPlayClickListener;
