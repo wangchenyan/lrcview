@@ -15,8 +15,7 @@ import java.io.InputStream;
 import me.wcy.lrcview.LrcView;
 
 public class MainActivity extends AppCompatActivity {
-    private LrcView lrcBig;
-    private LrcView lrcSmall;
+    private LrcView lrcView;
     private SeekBar seekBar;
     private Button btnPlayPause;
     private MediaPlayer mediaPlayer = new MediaPlayer();
@@ -27,14 +26,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        lrcBig = (LrcView) findViewById(R.id.lrc_big);
-        lrcSmall = (LrcView) findViewById(R.id.lrc_small);
+        lrcView = (LrcView) findViewById(R.id.lrc_view);
         seekBar = (SeekBar) findViewById(R.id.progress_bar);
         btnPlayPause = (Button) findViewById(R.id.btn_play_pause);
 
         try {
             mediaPlayer.reset();
-            AssetFileDescriptor fileDescriptor = getAssets().openFd("cbg.mp3");
+            AssetFileDescriptor fileDescriptor = getAssets().openFd("chengdu.mp3");
             mediaPlayer.setDataSource(fileDescriptor.getFileDescriptor(), fileDescriptor.getStartOffset(), fileDescriptor.getLength());
             mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -47,8 +45,7 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    lrcBig.updateTime(0);
-                    lrcSmall.updateTime(0);
+                    lrcView.updateTime(0);
                     seekBar.setProgress(0);
                 }
             });
@@ -56,13 +53,16 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        lrcBig.loadLrc(getLrcText("cbg.lrc"));
-        lrcSmall.loadLrc(getLrcText("cbg.lrc"));
+        lrcView.loadLrc(getLrcText("chengdu.lrc"));
 
-        lrcBig.setOnPlayClickListener(new LrcView.OnPlayClickListener() {
+        lrcView.setOnPlayClickListener(new LrcView.OnPlayClickListener() {
             @Override
             public boolean onPlayClick(long time) {
                 mediaPlayer.seekTo((int) time);
+                if (!mediaPlayer.isPlaying()) {
+                    mediaPlayer.start();
+                    handler.post(runnable);
+                }
                 return true;
             }
         });
@@ -91,11 +91,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.seekTo(seekBar.getProgress());
-                } else {
-                    seekBar.setProgress(0);
-                }
+                mediaPlayer.seekTo(seekBar.getProgress());
+                lrcView.updateTime(seekBar.getProgress());
             }
         });
     }
@@ -120,8 +117,7 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             if (mediaPlayer.isPlaying()) {
                 long time = mediaPlayer.getCurrentPosition();
-                lrcBig.updateTime(time);
-                lrcSmall.updateTime(time);
+                lrcView.updateTime(time);
                 seekBar.setProgress((int) time);
             }
 

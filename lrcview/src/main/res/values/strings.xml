@@ -1,4 +1,3 @@
 <resources>
-    <string name="app_name">LrcView</string>
     <string name="lrc_label">暂无歌词</string>
 </resources>

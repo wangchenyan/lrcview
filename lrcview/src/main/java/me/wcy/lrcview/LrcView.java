@@ -146,7 +146,7 @@ public class LrcView extends View {
         postInvalidate();
     }
 
-    public void setmTimeTextColor(int timeTextColor) {
+    public void setTimeTextColor(int timeTextColor) {
         mTimeTextColor = timeTextColor;
         postInvalidate();
     }
