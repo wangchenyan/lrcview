@@ -9,19 +9,19 @@
 * [Android开源音乐播放器之在线音乐列表自动加载更多](http://www.jianshu.com/p/576564627c96)
 
 ## 前言
-上一节我们仿照云音乐实现了黑胶唱片专辑封面，这节我们该实现歌词显示了。当然，歌词不仅仅是显示就完了，作为一个有素质的音乐播放器，我们当然还需要根据歌曲进度自动滚动歌词，并且要有滚动动画。
+上一节我们仿照云音乐实现了黑胶唱片专辑封面，这节我们该实现歌词显示了。当然，歌词不仅仅是显示就完了，作为一个有素质的音乐播放器，我们当然还需要根据歌曲进度自动滚动歌词，并且要支持上下拖动。
 
 - 项目地址：https://github.com/wangchenyan/LrcView
 - 有问题请提Issues
 - 如果喜欢，欢迎Star！
 
 ## 简介
-Android歌词控件，支持自动滚动，超长歌词自动换行，自定义属性。<br>
+Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义属性。<br>
 ![](https://raw.githubusercontent.com/wangchenyan/LrcView/master/art/screenshot.gif)
 
 ## 更新说明
 `v 2.0`
-- 新增滚动歌词功能
+- 新增上下拖动歌词功能
 
 `v 1.4`
 - 解析歌词放在工作线程中
@@ -34,7 +34,7 @@ Android歌词控件，支持自动滚动，超长歌词自动换行，自定义�
 - 支持RTL（从右向左）语言
 
 `v 1.1`
-- 新增超长歌词自动换行
+- 新增歌词自动换行
 - 新增自定义歌词Padding
 - 优化歌词解析
 
@@ -45,7 +45,7 @@ Android歌词控件，支持自动滚动，超长歌词自动换行，自定义�
 ## 使用
 **Gradle**
 ```
-// `latestVersion`改为文首徽章后对应的数值
+// "latestVersion"改为文首徽章后对应的数值
 compile 'me.wcy:lrcview:latestVersion'
 ```
 
@@ -55,22 +55,32 @@ compile 'me.wcy:lrcview:latestVersion'
 | lrcTextSize | 歌词文本字体大小 |
 | lrcNormalTextColor | 非当前行歌词字体颜色 |
 | lrcCurrentTextColor | 当前行歌词字体颜色 |
+| lrcTimelineTextColor | 拖动歌词时选中歌词的字体颜色 |
 | lrcDividerHeight | 歌词间距 |
 | lrcAnimationDuration | 歌词滚动动画时长 |
 | lrcLabel | 没有歌词时屏幕中央显示的文字，如“暂无歌词” |
 | lrcPadding | 歌词文字的左右边距 |
+| lrcTimelineColor | 拖动歌词时时间线的颜色 |
+| lrcTimelineHeight | 拖动歌词时时间线的高度 |
+| lrcPlayDrawable | 拖动歌词时左侧播放按钮图片 |
+| lrcTimeTextColor | 拖动歌词时右侧时间字体颜色 |
+| lrcTimeTextSize | 拖动歌词时右侧时间字体大小 |
 
 ## 方法
 | 方法 | 描述 |
 | ---- | ---- |
-| hasLrc() | 歌词是否有效 |
 | loadLrc(File) | 加载歌词文件 |
 | loadLrc(String) | 加载歌词文本 |
-| setLabel(String) | 设置歌词为空时屏幕中央显示的文字，如“暂无歌词” |
+| hasLrc() | 歌词是否有效 |
+| setLabel(String) | 设置歌词为空时视图中央显示的文字，如“暂无歌词” |
 | updateTime(long) | 刷新歌词 |
 | ~~onDrag(long)~~ | ~~将歌词滚动到指定时间，已弃用，请使用 updateTime(long) 代替~~ |
+| setOnPlayClickListener(OnPlayClickListener) | 设置拖动歌词时，播放按钮点击监听器。如果为非 null ，则激活歌词滚动功能，否则将将禁用歌词滚动功能 |
 | setNormalColor(int) | 设置非当前行歌词字体颜色 |
 | setCurrentColor(int) | 设置当前行歌词字体颜色 |
+| setTimelineTextColor | 设置拖动歌词时选中歌词的字体颜色 |
+| setTimelineColor | 设置拖动歌词时时间线的颜色 |
+| setTimeTextColor | 设置拖动歌词时右侧时间字体颜色 |
 
 ## 思路分析
 当前播放的那一行应该在视图中央，且高亮显示，计算出每一行位于中央时画布应该滚动的距离。
@@ -82,48 +92,133 @@ compile 'me.wcy:lrcview:latestVersion'
 多行歌词绘制采用StaticLayout。
 
 ## 代码实现
-**绘制过程**
 onDraw 中将歌词文本绘出，mOffset 是当前应该滚动的距离
 ```
 @Override
 protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
 
-    canvas.translate(0, mOffset);
+    int centerY = getHeight() / 2;
 
     // 无歌词文件
     if (!hasLrc()) {
-        mPaint.setColor(mCurrentColor);
+        mLrcPaint.setColor(mCurrentTextColor);
         @SuppressLint("DrawAllocation")
-        StaticLayout staticLayout = new StaticLayout(mLabel, mPaint, (int) getLrcWidth(),
+        StaticLayout staticLayout = new StaticLayout(mDefaultLabel, mLrcPaint, (int) getLrcWidth(),
                 Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
-        drawText(canvas, staticLayout, getHeight() / 2);
+        drawText(canvas, staticLayout, centerY);
         return;
     }
+
+    int centerLine = getCenterLine();
+
+    if (isShowTimeline) {
+        mPlayDrawable.draw(canvas);
+
+        mTimePaint.setColor(mTimelineColor);
+        canvas.drawLine(mTimeTextWidth, centerY, getWidth() - mTimeTextWidth, centerY, mTimePaint);
+
+        mTimePaint.setColor(mTimeTextColor);
+        String timeText = LrcUtils.formatTime(mLrcEntryList.get(centerLine).getTime());
+        float timeX = getWidth() - mTimeTextWidth / 2;
+        float timeY = centerY - (mTimeFontMetrics.descent + mTimeFontMetrics.ascent) / 2;
+        canvas.drawText(timeText, timeX, timeY, mTimePaint);
+    }
+
+    canvas.translate(0, mOffset);
 
     float y = 0;
     for (int i = 0; i < mLrcEntryList.size(); i++) {
         if (i > 0) {
             y += (mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) / 2 + mDividerHeight;
         }
-        mPaint.setColor((i == mCurrentLine) ? mCurrentColor : mNormalColor);
+        if (i == mCurrentLine) {
+            mLrcPaint.setColor(mCurrentTextColor);
+        } else if (isShowTimeline && i == centerLine) {
+            mLrcPaint.setColor(mTimelineTextColor);
+        } else {
+            mLrcPaint.setColor(mNormalTextColor);
+        }
         drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), y);
     }
 }
 ```
-换行时根据该行应该滚动的距离做动画
+手势监听器
 ```
-/**
- * 换行动画<br>
- * 属性动画只能在主线程使用
- */
-private void newline(int line) {
+@Override
+public boolean onTouchEvent(MotionEvent event) {
+    if (event.getAction() == MotionEvent.ACTION_UP) {
+        isTouching = false;
+        if (hasLrc() && !isFling) {
+            adjustCenter();
+            postDelayed(hideTimelineRunnable, TIMELINE_KEEP_TIME);
+        }
+    }
+    return mGestureDetector.onTouchEvent(event);
+}
+
+private GestureDetector.SimpleOnGestureListener mSimpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
+    @Override
+    public boolean onDown(MotionEvent e) {
+        if (hasLrc() && mOnPlayClickListener != null) {
+            mScroller.forceFinished(true);
+            removeCallbacks(hideTimelineRunnable);
+            isTouching = true;
+            isShowTimeline = true;
+            invalidate();
+            return true;
+        }
+        return super.onDown(e);
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        if (hasLrc()) {
+            mOffset += -distanceY;
+            mOffset = Math.min(mOffset, getOffset(0));
+            mOffset = Math.max(mOffset, getOffset(mLrcEntryList.size() - 1));
+            invalidate();
+            return true;
+        }
+        return super.onScroll(e1, e2, distanceX, distanceY);
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if (hasLrc()) {
+            mScroller.fling(0, (int) mOffset, 0, (int) velocityY, 0, 0, (int) getOffset(mLrcEntryList.size() - 1), (int) getOffset(0));
+            isFling = true;
+            return true;
+        }
+        return super.onFling(e1, e2, velocityX, velocityY);
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent e) {
+        if (hasLrc() && isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
+            int centerLine = getCenterLine();
+            long centerLineTime = mLrcEntryList.get(centerLine).getTime();
+            // onPlayClick 消费了才更新 UI
+            if (mOnPlayClickListener != null && mOnPlayClickListener.onPlayClick(centerLineTime)) {
+                isShowTimeline = false;
+                removeCallbacks(hideTimelineRunnable);
+                mCurrentLine = centerLine;
+                invalidate();
+                return true;
+            }
+        }
+        return super.onSingleTapConfirmed(e);
+    }
+};
+```
+滚动动画
+```
+private void scrollTo(int line, long duration) {
+    float offset = getOffset(line);
     endAnimation();
 
-    int offset = getOffset(line);
-
     mAnimator = ValueAnimator.ofFloat(mOffset, offset);
-    mAnimator.setDuration(mAnimationDuration);
+    mAnimator.setDuration(duration);
     mAnimator.setInterpolator(new LinearInterpolator());
     mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
         @Override
@@ -136,8 +231,8 @@ private void newline(int line) {
 }
 ```
 
-代码比较简单，大家根据注释肯定能看懂。到这里，我们已经实现了滚动显示的歌词控件了。<br>
-截图看不出动画效果，大家可以运行源码或下载[波尼音乐](http://fir.im/ponymusic)查看详细效果。
+代码比较简单，大家根据注释很容易就能看懂。到这里，我们已经实现了可拖动的歌词控件了。<br>
+截图看比较简单，大家可以运行源码或下载[波尼音乐](http://fir.im/ponymusic)查看详细效果。
 
 ## 关于作者
 简书：http://www.jianshu.com/users/3231579893ac<br>
@@ -145,7 +240,7 @@ private void newline(int line) {
 
 ## License
 
-    Copyright 2016 wangchenyan
+    Copyright 2017 wangchenyan
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
