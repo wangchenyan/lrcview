@@ -355,7 +355,8 @@ public class LrcView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP) {
+        if (event.getAction() == MotionEvent.ACTION_UP
+                || event.getAction() == MotionEvent.ACTION_CANCEL) {
             isTouching = false;
             if (hasLrc() && !isFling) {
                 adjustCenter();

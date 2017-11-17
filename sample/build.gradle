@@ -11,6 +11,7 @@ android {
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -21,6 +22,6 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:24.2.0'
+    compile 'com.android.support:appcompat-v7:26.1.0'
     compile project(':lrcview')
 }
