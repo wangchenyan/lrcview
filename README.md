@@ -11,7 +11,7 @@
 ## 前言
 上一节我们仿照云音乐实现了黑胶唱片专辑封面，这节我们该实现歌词显示了。当然，歌词不仅仅是显示就完了，作为一个有素质的音乐播放器，我们当然还需要根据歌曲进度自动滚动歌词，并且要支持上下拖动。
 
-- 项目地址：https://github.com/wangchenyan/LrcView
+- 项目地址：https://github.com/wangchenyan/lrcview
 - 有问题请提Issues
 - 如果喜欢，欢迎Star！
 
