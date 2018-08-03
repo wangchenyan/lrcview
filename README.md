@@ -1,4 +1,4 @@
-# LrcView
+# lrcview
 [![Download](https://api.bintray.com/packages/chanwong21/maven/lrcview/images/download.svg)](https://bintray.com/chanwong21/maven/lrcview/_latestVersion)
 
 ## 系列文章
@@ -47,7 +47,7 @@ Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义�
 **Gradle**
 ```
 // "latestVersion"改为文首徽章后对应的数值
-compile 'me.wcy:lrcview:latestVersion'
+implementation 'me.wcy:lrcview:latestVersion'
 ```
 
 ## 属性
