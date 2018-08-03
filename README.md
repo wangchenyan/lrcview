@@ -18,7 +18,7 @@
 ## 简介
 Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义属性。
 
-![](https://raw.githubusercontent.com/wangchenyan/LrcView/master/art/screenshot.gif)
+![](https://raw.githubusercontent.com/wangchenyan/lrcview/master/art/screenshot.gif)
 
 ## 更新说明
 `v 2.0`
