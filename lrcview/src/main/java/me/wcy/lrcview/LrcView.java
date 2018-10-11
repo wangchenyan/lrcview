@@ -22,6 +22,10 @@ import android.view.animation.LinearInterpolator;
 import android.widget.Scroller;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -60,6 +64,7 @@ public class LrcView extends View {
     private boolean isShowTimeline;
     private boolean isTouching;
     private boolean isFling;
+    private int mTextGravity;//歌词显示位置，靠左/居中/靠右
 
     /**
      * 播放按钮点击监听器，点击后应该跳转到指定播放位置
@@ -105,6 +110,8 @@ public class LrcView extends View {
         mPlayDrawable = (mPlayDrawable == null) ? getResources().getDrawable(R.drawable.lrc_play) : mPlayDrawable;
         mTimeTextColor = ta.getColor(R.styleable.LrcView_lrcTimeTextColor, getResources().getColor(R.color.lrc_time_text_color));
         float timeTextSize = ta.getDimension(R.styleable.LrcView_lrcTimeTextSize, getResources().getDimension(R.dimen.lrc_time_text_size));
+        mTextGravity = ta.getInteger(R.styleable.LrcView_lrcTextGravity, LrcEntry.GRAVITY_CENTER);
+
         ta.recycle();
 
         mDrawableWidth = (int) getResources().getDimension(R.dimen.lrc_drawable_width);
@@ -234,6 +241,45 @@ public class LrcView extends View {
     }
 
     /**
+     * 加载在线歌词
+     *
+     * @param lrcUrl 歌词文件的网络地址
+     */
+    public void loadLrcByUrl(String lrcUrl) {
+        new AsyncTask<String, Integer, String>() {
+            @Override
+            protected String doInBackground(String... params) {
+                String lrcText = null;
+                try {
+                    URL url = new URL(params[0]);
+                    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setReadTimeout(10000);
+
+                    if (conn.getResponseCode() == 200) {
+                        InputStream is =  conn.getInputStream();
+
+//                        int size = is.available();
+                        int size = conn.getContentLength();
+                        byte[] buffer = new byte[size];
+                        is.read(buffer);
+                        is.close();
+                        lrcText = new String(buffer);
+                    }
+                }catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return lrcText;
+            }
+
+            @Override
+            protected void onPostExecute(String lrcText) {
+                loadLrc(lrcText);
+            }
+        }.execute(lrcUrl);
+    }
+
+    /**
      * 歌词是否有效
      *
      * @return true，如果歌词有效，否则false
@@ -301,9 +347,8 @@ public class LrcView extends View {
         // 无歌词文件
         if (!hasLrc()) {
             mLrcPaint.setColor(mCurrentTextColor);
-            @SuppressLint("DrawAllocation")
-            StaticLayout staticLayout = new StaticLayout(mDefaultLabel, mLrcPaint, (int) getLrcWidth(),
-                    Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
+            @SuppressLint("DrawAllocation") StaticLayout staticLayout = new StaticLayout(mDefaultLabel, mLrcPaint, (int) getLrcWidth(), Layout.Alignment.ALIGN_CENTER, 1f, 0f,
+                    false);
             drawText(canvas, staticLayout, centerY);
             return;
         }
@@ -355,8 +400,7 @@ public class LrcView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP
-                || event.getAction() == MotionEvent.ACTION_CANCEL) {
+        if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
             isTouching = false;
             if (hasLrc() && !isFling) {
                 adjustCenter();
@@ -469,7 +513,7 @@ public class LrcView extends View {
         Collections.sort(mLrcEntryList);
 
         for (LrcEntry lrcEntry : mLrcEntryList) {
-            lrcEntry.init(mLrcPaint, (int) getLrcWidth());
+            lrcEntry.init(mLrcPaint, (int) getLrcWidth(), mTextGravity);
         }
 
         mOffset = getHeight() / 2;

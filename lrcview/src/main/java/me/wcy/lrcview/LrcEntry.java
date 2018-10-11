@@ -25,14 +25,32 @@ class LrcEntry implements Comparable<LrcEntry> {
     private String text;
     private StaticLayout staticLayout;
     private float offset = Float.MIN_VALUE;
+    public static final int GRAVITY_LEFT = 1;
+    public static final int GRAVITY_CENTER = 2;
+    public static final int GRAVITY_RIGHT = 3;
 
     private LrcEntry(long time, String text) {
         this.time = time;
         this.text = text;
     }
 
-    void init(TextPaint paint, int width) {
-        staticLayout = new StaticLayout(text, paint, width, Layout.Alignment.ALIGN_CENTER, 1f, 0f, false);
+    void init(TextPaint paint, int width, int gravity) {
+        Layout.Alignment align;
+        switch (gravity) {
+            case GRAVITY_LEFT:
+                align = Layout.Alignment.ALIGN_NORMAL;
+                break;
+
+            default:
+            case GRAVITY_CENTER:
+                align = Layout.Alignment.ALIGN_CENTER;
+                break;
+
+            case GRAVITY_RIGHT:
+                align = Layout.Alignment.ALIGN_OPPOSITE;
+                break;
+        }
+        staticLayout = new StaticLayout(text, paint, width, align, 1f, 0f, false);
     }
 
     long getTime() {
@@ -114,7 +132,8 @@ class LrcEntry implements Comparable<LrcEntry> {
         }
 
         line = line.trim();
-        Matcher lineMatcher = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d\\d\\])+)(.+)").matcher(line);
+//        Matcher lineMatcher = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d\\d\\])+)(.+)").matcher(line);
+        Matcher lineMatcher = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d{2,3}\\])+)(.+)").matcher(line);
         if (!lineMatcher.matches()) {
             return null;
         }
@@ -123,12 +142,14 @@ class LrcEntry implements Comparable<LrcEntry> {
         String text = lineMatcher.group(3);
         List<LrcEntry> entryList = new ArrayList<>();
 
-        Matcher timeMatcher = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d\\d)\\]").matcher(times);
+//        Matcher timeMatcher = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d\\d)\\]").matcher(times);
+        Matcher timeMatcher = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d){2,3}\\]").matcher(times);
         while (timeMatcher.find()) {
             long min = Long.parseLong(timeMatcher.group(1));
             long sec = Long.parseLong(timeMatcher.group(2));
             long mil = Long.parseLong(timeMatcher.group(3));
-            long time = min * DateUtils.MINUTE_IN_MILLIS + sec * DateUtils.SECOND_IN_MILLIS + mil * 10;
+//            long time = min * DateUtils.MINUTE_IN_MILLIS + sec * DateUtils.SECOND_IN_MILLIS + mil * 10;
+            long time = min * DateUtils.MINUTE_IN_MILLIS + sec * DateUtils.SECOND_IN_MILLIS + (mil >= 100L ? mil : mil * 10);
             entryList.add(new LrcEntry(time, text));
         }
         return entryList;
