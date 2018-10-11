@@ -14,5 +14,10 @@
         <attr name="lrcPlayDrawable" format="reference" />
         <attr name="lrcTimeTextColor" format="reference|color" />
         <attr name="lrcTimeTextSize" format="dimension" />
+        <attr name="lrcTextGravity">
+            <enum name="left" value="1"/>
+            <enum name="center" value="2"/>
+            <enum name="right" value="3"/>
+        </attr>
     </declare-styleable>
 </resources>
