@@ -2,11 +2,11 @@
 [![Download](https://api.bintray.com/packages/chanwong21/maven/lrcview/images/download.svg)](https://bintray.com/chanwong21/maven/lrcview/_latestVersion)
 
 ## 系列文章
-* [Android开源在线音乐播放器——波尼音乐](http://www.jianshu.com/p/1c0f5c4f64fa)
-* [Android开源音乐播放器之播放器基本功能](http://www.jianshu.com/p/bc2f779a5400)
-* [Android开源音乐播放器之高仿云音乐黑胶唱片](http://www.jianshu.com/p/f1d8eb8bb3e5)
-* [Android开源音乐播放器之自动滚动歌词](http://www.jianshu.com/p/0feb6171b0c5)
-* [Android开源音乐播放器之在线音乐列表自动加载更多](http://www.jianshu.com/p/576564627c96)
+- [Android开源在线音乐播放器——波尼音乐](https://juejin.im/post/5c373a32e51d4551cc6df6db)
+- [Android开源音乐播放器之播放器基本功能](https://juejin.im/post/5c373a32e51d45521315fc50)
+- [Android开源音乐播放器之高仿云音乐黑胶唱片](https://juejin.im/post/5c373a336fb9a04a016488e8)
+- [Android开源音乐播放器之自动滚动歌词](https://juejin.im/post/5c373a336fb9a049f43b85de)
+- [Android开源音乐播放器之在线音乐列表自动加载更多](https://juejin.im/post/5c373a336fb9a049b82aaaaf)
 
 ## 前言
 上一节我们仿照云音乐实现了黑胶唱片专辑封面，这节我们该实现歌词显示了。当然，歌词不仅仅是显示就完了，作为一个有素质的音乐播放器，我们当然还需要根据歌曲进度自动滚动歌词，并且要支持上下拖动。
@@ -225,7 +225,7 @@ private void scrollTo(int line, long duration) {
 截图看比较简单，大家可以运行源码或下载[波尼音乐](http://fir.im/ponymusic)查看详细效果。
 
 ## 关于作者
-简书：http://www.jianshu.com/users/3231579893ac<br>
+掘金：https://juejin.im/user/58abd9f1da2f607e924e945a<br>
 微博：http://weibo.com/wangchenyan1993
 
 ## License
