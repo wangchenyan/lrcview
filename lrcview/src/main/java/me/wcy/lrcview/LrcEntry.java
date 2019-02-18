@@ -133,7 +133,7 @@ class LrcEntry implements Comparable<LrcEntry> {
 
         line = line.trim();
 //        Matcher lineMatcher = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d\\d\\])+)(.+)").matcher(line);
-        Matcher lineMatcher = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d{2,3}\\])+)(.+)").matcher(line);
+        Matcher lineMatcher = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d{2,3}\\])+)([\\s\\S]*)").matcher(line);
         if (!lineMatcher.matches()) {
             return null;
         }
