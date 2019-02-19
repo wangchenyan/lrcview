@@ -38,6 +38,7 @@ import android.widget.Scroller;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -575,7 +576,18 @@ public class LrcView extends View {
                 invalidate();
             }
         });
+        resetDurationScale();
         mAnimator.start();
+    }
+
+    private void resetDurationScale() {
+        try {
+            Field mField = ValueAnimator.class.getDeclaredField("sDurationScale");
+            mField.setAccessible(true);
+            mField.setFloat(null, 1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void endAnimation() {
