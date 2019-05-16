@@ -53,7 +53,8 @@ implementation 'me.wcy:lrcview:latestVersion'
 ## 属性
 | 属性 | 描述 |
 | ---- | ---- |
-| lrcTextSize | 歌词文本字体大小 |
+| lrcTextSize | 当前歌词文本字体大小 |
+| lrcNormalTextSize | 普通歌词文本字体大小 |
 | lrcNormalTextColor | 非当前行歌词字体颜色 |
 | lrcCurrentTextColor | 当前行歌词字体颜色 |
 | lrcTimelineTextColor | 拖动歌词时选中歌词的字体颜色 |
@@ -82,6 +83,8 @@ implementation 'me.wcy:lrcview:latestVersion'
 | setTimelineTextColor | 设置拖动歌词时选中歌词的字体颜色 |
 | setTimelineColor | 设置拖动歌词时时间线的颜色 |
 | setTimeTextColor | 设置拖动歌词时右侧时间字体颜色 |
+| setCurrentTextSize | 当前歌词文本字体大小 |
+| setNormalTextSize | 普通歌词文本字体大小 |
 
 ## 思路分析
 正常播放时，当前播放的那一行应该在视图中央，首先计算出每一行位于中央时画布应该滚动的距离。<br>
