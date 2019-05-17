@@ -61,7 +61,9 @@ public class LrcView extends View {
     private float mDividerHeight;
     private long mAnimationDuration;
     private int mNormalTextColor;
+    private float mNormalTextSize;
     private int mCurrentTextColor;
+    private float mCurrentTextSize;
     private int mTimelineTextColor;
     private int mTimelineColor;
     private int mTimeTextColor;
@@ -108,7 +110,12 @@ public class LrcView extends View {
 
     private void init(AttributeSet attrs) {
         TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.LrcView);
-        float lrcTextSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, getResources().getDimension(R.dimen.lrc_text_size));
+        mCurrentTextSize = ta.getDimension(R.styleable.LrcView_lrcTextSize, getResources().getDimension(R.dimen.lrc_text_size));
+        mNormalTextSize = ta.getDimension(R.styleable.LrcView_lrcNormalTextSize, getResources().getDimension(R.dimen.lrc_text_size));
+        if (mNormalTextSize == 0) {
+            mNormalTextSize = mCurrentTextSize;
+        }
+
         mDividerHeight = ta.getDimension(R.styleable.LrcView_lrcDividerHeight, getResources().getDimension(R.dimen.lrc_divider_height));
         int defDuration = getResources().getInteger(R.integer.lrc_animation_duration);
         mAnimationDuration = ta.getInt(R.styleable.LrcView_lrcAnimationDuration, defDuration);
@@ -133,7 +140,7 @@ public class LrcView extends View {
         mTimeTextWidth = (int) getResources().getDimension(R.dimen.lrc_time_width);
 
         mLrcPaint.setAntiAlias(true);
-        mLrcPaint.setTextSize(lrcTextSize);
+        mLrcPaint.setTextSize(mCurrentTextSize);
         mLrcPaint.setTextAlign(Paint.Align.LEFT);
         mTimePaint.setAntiAlias(true);
         mTimePaint.setTextSize(timeTextSize);
@@ -151,6 +158,22 @@ public class LrcView extends View {
     public void setNormalColor(int normalColor) {
         mNormalTextColor = normalColor;
         postInvalidate();
+    }
+
+    /**
+     * 设置普通情况的字体大小
+     * @param size
+     */
+    public void setNormalTextSize(float size) {
+        mNormalTextSize = size;
+    }
+
+    /**
+     * 设置当前的字体大小
+     * @param size
+     */
+    public void setCurrentTextSize(float size) {
+        mCurrentTextSize = size;
     }
 
     public void setCurrentColor(int currentColor) {
@@ -392,10 +415,12 @@ public class LrcView extends View {
                 y += (mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) / 2 + mDividerHeight;
             }
             if (i == mCurrentLine) {
+                mLrcPaint.setTextSize(mCurrentTextSize);
                 mLrcPaint.setColor(mCurrentTextColor);
             } else if (isShowTimeline && i == centerLine) {
                 mLrcPaint.setColor(mTimelineTextColor);
             } else {
+                mLrcPaint.setTextSize(mNormalTextSize);
                 mLrcPaint.setColor(mNormalTextColor);
             }
             drawText(canvas, mLrcEntryList.get(i).getStaticLayout(), y);

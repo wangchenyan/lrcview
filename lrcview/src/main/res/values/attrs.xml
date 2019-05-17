@@ -2,6 +2,7 @@
 <resources>
     <declare-styleable name="LrcView">
         <attr name="lrcTextSize" format="dimension" />
+        <attr name="lrcNormalTextSize" format="dimension" />
         <attr name="lrcDividerHeight" format="dimension" />
         <attr name="lrcNormalTextColor" format="reference|color" />
         <attr name="lrcCurrentTextColor" format="reference|color" />
