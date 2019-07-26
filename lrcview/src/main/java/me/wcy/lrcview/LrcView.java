@@ -36,11 +36,6 @@ import android.view.animation.LinearInterpolator;
 import android.widget.Scroller;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -155,52 +150,84 @@ public class LrcView extends View {
         mScroller = new Scroller(getContext());
     }
 
+    /**
+     * 设置非当前行歌词字体颜色
+     */
     public void setNormalColor(int normalColor) {
         mNormalTextColor = normalColor;
         postInvalidate();
     }
 
     /**
-     * 设置普通情况的字体大小
-     * @param size
+     * 普通歌词文本字体大小
      */
     public void setNormalTextSize(float size) {
         mNormalTextSize = size;
     }
 
     /**
-     * 设置当前的字体大小
-     * @param size
+     * 当前歌词文本字体大小
      */
     public void setCurrentTextSize(float size) {
         mCurrentTextSize = size;
     }
 
+    /**
+     * 设置当前行歌词的字体颜色
+     */
     public void setCurrentColor(int currentColor) {
         mCurrentTextColor = currentColor;
         postInvalidate();
     }
 
+    /**
+     * 设置拖动歌词时选中歌词的字体颜色
+     */
     public void setTimelineTextColor(int timelineTextColor) {
         mTimelineTextColor = timelineTextColor;
         postInvalidate();
     }
 
+    /**
+     * 设置拖动歌词时时间线的颜色
+     */
     public void setTimelineColor(int timelineColor) {
         mTimelineColor = timelineColor;
         postInvalidate();
     }
 
+    /**
+     * 设置拖动歌词时右侧时间字体颜色
+     */
     public void setTimeTextColor(int timeTextColor) {
         mTimeTextColor = timeTextColor;
         postInvalidate();
     }
 
     /**
+     * 设置歌词是否允许拖动
+     *
+     * @param draggable           是否允许拖动
+     * @param onPlayClickListener 设置歌词拖动后播放按钮点击监听器，如果允许拖动，则不能为 null
+     */
+    public void setDraggable(boolean draggable, OnPlayClickListener onPlayClickListener) {
+        if (draggable) {
+            if (onPlayClickListener == null) {
+                throw new IllegalArgumentException("if draggable, onPlayClickListener must not be null");
+            }
+            mOnPlayClickListener = onPlayClickListener;
+        } else {
+            mOnPlayClickListener = null;
+        }
+    }
+
+    /**
      * 设置播放按钮点击监听器
      *
      * @param onPlayClickListener 如果为非 null ，则激活歌词拖动功能，否则将将禁用歌词拖动功能
+     * @deprecated use {@link #setDraggable(boolean, OnPlayClickListener)} instead
      */
+    @Deprecated
     public void setOnPlayClickListener(OnPlayClickListener onPlayClickListener) {
         mOnPlayClickListener = onPlayClickListener;
     }
@@ -225,20 +252,22 @@ public class LrcView extends View {
      */
     public void loadLrc(final File lrcFile) {
         runOnUi(new Runnable() {
+            @SuppressLint("StaticFieldLeak")
             @Override
             public void run() {
                 reset();
 
-                setFlag(lrcFile);
+                final String flag = "file://" + lrcFile.getPath();
+                setFlag(flag);
                 new AsyncTask<File, Integer, List<LrcEntry>>() {
                     @Override
                     protected List<LrcEntry> doInBackground(File... params) {
-                        return LrcEntry.parseLrc(params[0]);
+                        return LrcUtils.parseLrc(params[0]);
                     }
 
                     @Override
                     protected void onPostExecute(List<LrcEntry> lrcEntries) {
-                        if (getFlag() == lrcFile) {
+                        if (getFlag() == flag) {
                             onLrcLoaded(lrcEntries);
                             setFlag(null);
                         }
@@ -255,20 +284,22 @@ public class LrcView extends View {
      */
     public void loadLrc(final String lrcText) {
         runOnUi(new Runnable() {
+            @SuppressLint("StaticFieldLeak")
             @Override
             public void run() {
                 reset();
 
-                setFlag(lrcText);
+                final String flag = "text://" + lrcText;
+                setFlag(flag);
                 new AsyncTask<String, Integer, List<LrcEntry>>() {
                     @Override
                     protected List<LrcEntry> doInBackground(String... params) {
-                        return LrcEntry.parseLrc(params[0]);
+                        return LrcUtils.parseLrc(params[0]);
                     }
 
                     @Override
                     protected void onPostExecute(List<LrcEntry> lrcEntries) {
-                        if (getFlag() == lrcText) {
+                        if (getFlag() == flag) {
                             onLrcLoaded(lrcEntries);
                             setFlag(null);
                         }
@@ -283,36 +314,21 @@ public class LrcView extends View {
      *
      * @param lrcUrl 歌词文件的网络地址
      */
-    public void loadLrcByUrl(String lrcUrl) {
+    @SuppressLint("StaticFieldLeak")
+    public void loadLrcByUrl(final String lrcUrl) {
+        final String flag = "url://" + lrcUrl;
+        setFlag(flag);
         new AsyncTask<String, Integer, String>() {
             @Override
             protected String doInBackground(String... params) {
-                String lrcText = null;
-                try {
-                    URL url = new URL(params[0]);
-                    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setReadTimeout(10000);
-
-                    if (conn.getResponseCode() == 200) {
-                        InputStream is =  conn.getInputStream();
-
-//                        int size = is.available();
-                        int size = conn.getContentLength();
-                        byte[] buffer = new byte[size];
-                        is.read(buffer);
-                        is.close();
-                        lrcText = new String(buffer);
-                    }
-                }catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return lrcText;
+                return LrcUtils.getContentFromNetwork(params[0]);
             }
 
             @Override
             protected void onPostExecute(String lrcText) {
-                loadLrc(lrcText);
+                if (getFlag() == flag) {
+                    loadLrc(lrcText);
+                }
             }
         }.execute(lrcUrl);
     }
@@ -343,7 +359,7 @@ public class LrcView extends View {
                 if (line != mCurrentLine) {
                     mCurrentLine = line;
                     if (!isShowTimeline) {
-                        scrollTo(line);
+                        smoothScrollTo(line);
                     } else {
                         invalidate();
                     }
@@ -367,12 +383,11 @@ public class LrcView extends View {
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         if (changed) {
+            initPlayDrawable();
             initEntryList();
-            int l = (mTimeTextWidth - mDrawableWidth) / 2;
-            int t = getHeight() / 2 - mDrawableWidth / 2;
-            int r = l + mDrawableWidth;
-            int b = t + mDrawableWidth;
-            mPlayDrawable.setBounds(l, t, r, b);
+            if (hasLrc()) {
+                smoothScrollTo(mCurrentLine, 0L);
+            }
         }
     }
 
@@ -451,6 +466,9 @@ public class LrcView extends View {
         return mGestureDetector.onTouchEvent(event);
     }
 
+    /**
+     * 手势监听器
+     */
     private GestureDetector.SimpleOnGestureListener mSimpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
         @Override
         public boolean onDown(MotionEvent e) {
@@ -510,7 +528,7 @@ public class LrcView extends View {
         public void run() {
             if (hasLrc() && isShowTimeline) {
                 isShowTimeline = false;
-                scrollTo(mCurrentLine);
+                smoothScrollTo(mCurrentLine);
             }
         }
     };
@@ -542,16 +560,24 @@ public class LrcView extends View {
             mLrcEntryList.addAll(entryList);
         }
 
+        Collections.sort(mLrcEntryList);
+
         initEntryList();
         invalidate();
+    }
+
+    private void initPlayDrawable() {
+        int l = (mTimeTextWidth - mDrawableWidth) / 2;
+        int t = getHeight() / 2 - mDrawableWidth / 2;
+        int r = l + mDrawableWidth;
+        int b = t + mDrawableWidth;
+        mPlayDrawable.setBounds(l, t, r, b);
     }
 
     private void initEntryList() {
         if (!hasLrc() || getWidth() == 0) {
             return;
         }
-
-        Collections.sort(mLrcEntryList);
 
         for (LrcEntry lrcEntry : mLrcEntryList) {
             lrcEntry.init(mLrcPaint, (int) getLrcWidth(), mTextGravity);
@@ -574,20 +600,23 @@ public class LrcView extends View {
     }
 
     /**
-     * 滚动到某一行
-     */
-    private void scrollTo(int line) {
-        scrollTo(line, mAnimationDuration);
-    }
-
-    /**
      * 将中心行微调至正中心
      */
     private void adjustCenter() {
-        scrollTo(getCenterLine(), ADJUST_DURATION);
+        smoothScrollTo(getCenterLine(), ADJUST_DURATION);
     }
 
-    private void scrollTo(int line, long duration) {
+    /**
+     * 滚动到某一行
+     */
+    private void smoothScrollTo(int line) {
+        smoothScrollTo(line, mAnimationDuration);
+    }
+
+    /**
+     * 滚动到某一行
+     */
+    private void smoothScrollTo(int line, long duration) {
         float offset = getOffset(line);
         endAnimation();
 
@@ -601,20 +630,13 @@ public class LrcView extends View {
                 invalidate();
             }
         });
-        resetDurationScale();
+        LrcUtils.resetDurationScale();
         mAnimator.start();
     }
 
-    private void resetDurationScale() {
-        try {
-            Field mField = ValueAnimator.class.getDeclaredField("sDurationScale");
-            mField.setAccessible(true);
-            mField.setFloat(null, 1);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * 结束滚动动画
+     */
     private void endAnimation() {
         if (mAnimator != null && mAnimator.isRunning()) {
             mAnimator.end();
@@ -645,6 +667,9 @@ public class LrcView extends View {
         return 0;
     }
 
+    /**
+     * 获取当前在视图中央的行数
+     */
     private int getCenterLine() {
         int centerLine = 0;
         float minDistance = Float.MAX_VALUE;
@@ -657,6 +682,10 @@ public class LrcView extends View {
         return centerLine;
     }
 
+    /**
+     * 获取歌词距离视图顶部的距离
+     * 采用懒加载方式
+     */
     private float getOffset(int line) {
         if (mLrcEntryList.get(line).getOffset() == Float.MIN_VALUE) {
             float offset = getHeight() / 2;
@@ -669,10 +698,16 @@ public class LrcView extends View {
         return mLrcEntryList.get(line).getOffset();
     }
 
+    /**
+     * 获取歌词宽度
+     */
     private float getLrcWidth() {
         return getWidth() - mLrcPadding * 2;
     }
 
+    /**
+     * 在主线程中运行
+     */
     private void runOnUi(Runnable r) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             r.run();

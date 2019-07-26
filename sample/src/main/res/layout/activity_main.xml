@@ -26,7 +26,7 @@
         app:lrcTimeTextColor="#BDBDBD"
         app:lrcTimelineColor="#80BDBDBD"
         app:lrcTimelineTextColor="#9FA8DA"
-        app:lrcTextGravity="left"/>
+        app:lrcTextGravity="center"/>
 
     <SeekBar
         android:id="@+id/progress_bar"

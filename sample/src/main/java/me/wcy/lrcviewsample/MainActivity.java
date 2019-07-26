@@ -26,9 +26,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        lrcView = (LrcView) findViewById(R.id.lrc_view);
-        seekBar = (SeekBar) findViewById(R.id.progress_bar);
-        btnPlayPause = (Button) findViewById(R.id.btn_play_pause);
+        lrcView = findViewById(R.id.lrc_view);
+        seekBar = findViewById(R.id.progress_bar);
+        btnPlayPause = findViewById(R.id.btn_play_pause);
 
         try {
             mediaPlayer.reset();
@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
         lrcView.loadLrc(getLrcText("chengdu.lrc"));
 
-        lrcView.setOnPlayClickListener(new LrcView.OnPlayClickListener() {
+        lrcView.setDraggable(true, new LrcView.OnPlayClickListener() {
             @Override
             public boolean onPlayClick(long time) {
                 mediaPlayer.seekTo((int) time);

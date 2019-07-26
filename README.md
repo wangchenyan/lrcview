@@ -76,10 +76,11 @@ implementation 'me.wcy:lrcview:latestVersion'
 | hasLrc() | 歌词是否有效 |
 | setLabel(String) | 设置歌词为空时视图中央显示的文字，如“暂无歌词” |
 | updateTime(long) | 刷新歌词 |
-| ~~onDrag(long)~~ | ~~将歌词滚动到指定时间，已弃用，请使用 updateTime(long) 代替~~ |
-| setOnPlayClickListener(OnPlayClickListener) | 设置拖动歌词时，播放按钮点击监听器。如果为非 null ，则激活歌词拖动功能，否则将将禁用歌词拖动功能 |
-| setNormalColor(int) | 设置非当前行歌词字体颜色 |
-| setCurrentColor(int) | 设置当前行歌词字体颜色 |
+| ~~onDrag(long)~~ | ~~将歌词滚动到指定时间。已弃用，请使用 updateTime(long) 代替~~ |
+| ~~setOnPlayClickListener(OnPlayClickListener)~~ | ~~设置拖动歌词时，播放按钮点击监听器。如果为非 null ，则激活歌词拖动功能，否则将将禁用歌词拖动功能。已弃用，请使用 setDraggable 代替~~ |
+| setDraggable(Boolean, OnPlayClickListener) | 设置歌词是否允许拖动。如果允许拖动，则 OnPlayClickListener 不能为 null |
+| setNormalColor | 设置非当前行歌词字体颜色 |
+| setCurrentColor | 设置当前行歌词字体颜色 |
 | setTimelineTextColor | 设置拖动歌词时选中歌词的字体颜色 |
 | setTimelineColor | 设置拖动歌词时时间线的颜色 |
 | setTimeTextColor | 设置拖动歌词时右侧时间字体颜色 |
