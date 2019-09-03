@@ -9,7 +9,7 @@ ext {
     artifact = 'lrcview'
 
     libraryName = 'lrcview'
-    libraryVersion = rootProject.ext.versionName
+    libraryVersion = VERSION_NAME
     libraryDescription = 'A lyric view on Android'
 
     siteUrl = 'https://github.com/wangchenyan/LrcView'

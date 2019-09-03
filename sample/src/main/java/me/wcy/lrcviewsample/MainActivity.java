@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
         try {
             mediaPlayer.reset();
-            AssetFileDescriptor fileDescriptor = getAssets().openFd("chengdu.mp3");
+            AssetFileDescriptor fileDescriptor = getAssets().openFd("send_it.m4a");
             mediaPlayer.setDataSource(fileDescriptor.getFileDescriptor(), fileDescriptor.getStartOffset(), fileDescriptor.getLength());
             mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -53,7 +53,9 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        lrcView.loadLrc(getLrcText("chengdu.lrc"));
+        String mainLrcText = getLrcText("send_it_en.lrc");
+        String secondLrcText = getLrcText("send_it_cn.lrc");
+        lrcView.loadLrc(mainLrcText, secondLrcText);
 
         lrcView.setDraggable(true, new LrcView.OnPlayClickListener() {
             @Override

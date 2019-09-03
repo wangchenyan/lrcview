@@ -18,18 +18,6 @@ import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 一行歌词实体
@@ -37,18 +25,25 @@ import java.util.regex.Pattern;
 class LrcEntry implements Comparable<LrcEntry> {
     private long time;
     private String text;
+    private String secondText;
     private StaticLayout staticLayout;
     /**
      * 歌词距离视图顶部的距离
      */
     private float offset = Float.MIN_VALUE;
+    public static final int GRAVITY_CENTER = 0;
     public static final int GRAVITY_LEFT = 1;
-    public static final int GRAVITY_CENTER = 2;
-    public static final int GRAVITY_RIGHT = 3;
+    public static final int GRAVITY_RIGHT = 2;
 
     LrcEntry(long time, String text) {
         this.time = time;
         this.text = text;
+    }
+
+    LrcEntry(long time, String text, String secondText) {
+        this.time = time;
+        this.text = text;
+        this.secondText = secondText;
     }
 
     void init(TextPaint paint, int width, int gravity) {
@@ -67,7 +62,7 @@ class LrcEntry implements Comparable<LrcEntry> {
                 align = Layout.Alignment.ALIGN_OPPOSITE;
                 break;
         }
-        staticLayout = new StaticLayout(text, paint, width, align, 1f, 0f, false);
+        staticLayout = new StaticLayout(getShowText(), paint, width, align, 1f, 0f, false);
 
         offset = Float.MIN_VALUE;
     }
@@ -93,6 +88,23 @@ class LrcEntry implements Comparable<LrcEntry> {
 
     public void setOffset(float offset) {
         this.offset = offset;
+    }
+
+    String getText() {
+        return text;
+    }
+
+
+    void setSecondText(String secondText) {
+        this.secondText = secondText;
+    }
+
+    private String getShowText() {
+        if (!TextUtils.isEmpty(secondText)) {
+            return text + "\n" + secondText;
+        } else {
+            return text;
+        }
     }
 
     @Override

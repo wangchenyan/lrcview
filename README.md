@@ -58,6 +58,7 @@ implementation 'me.wcy:lrcview:latestVersion'
 | lrcNormalTextColor | 非当前行歌词字体颜色 |
 | lrcCurrentTextColor | 当前行歌词字体颜色 |
 | lrcTimelineTextColor | 拖动歌词时选中歌词的字体颜色 |
+| lrcTextGravity | 歌词对齐方向，center：居中对齐，left：靠左对齐，right：靠右对齐，默认为 center |
 | lrcDividerHeight | 歌词间距 |
 | lrcAnimationDuration | 歌词滚动动画时长 |
 | lrcLabel | 没有歌词时屏幕中央显示的文字，如“暂无歌词” |
@@ -72,7 +73,10 @@ implementation 'me.wcy:lrcview:latestVersion'
 | 方法 | 描述 |
 | ---- | ---- |
 | loadLrc(File) | 加载歌词文件 |
+| loadLrc(File, File) | 加载双语歌词文件，两种语言的歌词时间戳需要一致 |
 | loadLrc(String) | 加载歌词文本 |
+| loadLrc(String, String) | 加载双语歌词文本，两种语言的歌词时间戳需要一致 |
+| loadLrcByUrl(String) | 加载在线歌词文本 |
 | hasLrc() | 歌词是否有效 |
 | setLabel(String) | 设置歌词为空时视图中央显示的文字，如“暂无歌词” |
 | updateTime(long) | 刷新歌词 |

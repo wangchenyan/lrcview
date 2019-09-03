@@ -213,7 +213,7 @@ public class LrcView extends View {
     public void setDraggable(boolean draggable, OnPlayClickListener onPlayClickListener) {
         if (draggable) {
             if (onPlayClickListener == null) {
-                throw new IllegalArgumentException("if draggable, onPlayClickListener must not be null");
+                throw new IllegalArgumentException("if draggable == true, onPlayClickListener must not be null");
             }
             mOnPlayClickListener = onPlayClickListener;
         } else {
@@ -251,18 +251,28 @@ public class LrcView extends View {
      * @param lrcFile 歌词文件
      */
     public void loadLrc(final File lrcFile) {
+        loadLrc(lrcFile, null);
+    }
+
+    /**
+     * 加载双语歌词文件，两种语言的歌词时间戳需要一致
+     *
+     * @param mainLrcFile   第一种语言歌词文件
+     * @param secondLrcFile 第二种语言歌词文件
+     */
+    public void loadLrc(final File mainLrcFile, final File secondLrcFile) {
         runOnUi(new Runnable() {
             @SuppressLint("StaticFieldLeak")
             @Override
             public void run() {
                 reset();
 
-                final String flag = "file://" + lrcFile.getPath();
+                final String flag = "file://" + mainLrcFile.getPath() + "#" + secondLrcFile.getPath();
                 setFlag(flag);
                 new AsyncTask<File, Integer, List<LrcEntry>>() {
                     @Override
                     protected List<LrcEntry> doInBackground(File... params) {
-                        return LrcUtils.parseLrc(params[0]);
+                        return LrcUtils.parseLrc(params);
                     }
 
                     @Override
@@ -272,29 +282,39 @@ public class LrcView extends View {
                             setFlag(null);
                         }
                     }
-                }.execute(lrcFile);
+                }.execute(mainLrcFile, secondLrcFile);
             }
         });
     }
 
     /**
-     * 加载歌词文件
+     * 加载歌词文本
      *
      * @param lrcText 歌词文本
      */
     public void loadLrc(final String lrcText) {
+        loadLrc(lrcText, null);
+    }
+
+    /**
+     * 加载双语歌词文本，两种语言的歌词时间戳需要一致
+     *
+     * @param mainLrcText   第一种语言歌词文本
+     * @param secondLrcText 第二种语言歌词文本
+     */
+    public void loadLrc(final String mainLrcText, final String secondLrcText) {
         runOnUi(new Runnable() {
             @SuppressLint("StaticFieldLeak")
             @Override
             public void run() {
                 reset();
 
-                final String flag = "text://" + lrcText;
+                final String flag = "text://" + mainLrcText + "#" + secondLrcText;
                 setFlag(flag);
                 new AsyncTask<String, Integer, List<LrcEntry>>() {
                     @Override
                     protected List<LrcEntry> doInBackground(String... params) {
-                        return LrcUtils.parseLrc(params[0]);
+                        return LrcUtils.parseLrc(params);
                     }
 
                     @Override
@@ -304,7 +324,7 @@ public class LrcView extends View {
                             setFlag(null);
                         }
                     }
-                }.execute(lrcText);
+                }.execute(mainLrcText, secondLrcText);
             }
         });
     }

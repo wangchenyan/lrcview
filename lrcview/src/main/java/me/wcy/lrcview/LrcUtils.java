@@ -40,34 +40,34 @@ import java.util.regex.Pattern;
 class LrcUtils {
 
     /**
-     * 获取网络文本，需要在工作线程中执行
+     * 从文件解析双语歌词
      */
-    public static String getContentFromNetwork(String url) {
-        String lrcText = null;
-        try {
-            URL _url = new URL(url);
-            HttpURLConnection conn = (HttpURLConnection) _url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setReadTimeout(10000);
-
-            if (conn.getResponseCode() == 200) {
-                InputStream is = conn.getInputStream();
-                int size = conn.getContentLength();
-                byte[] buffer = new byte[size];
-                is.read(buffer);
-                is.close();
-                lrcText = new String(buffer);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    public static List<LrcEntry> parseLrc(File[] lrcFiles) {
+        if (lrcFiles == null || lrcFiles.length != 2 || lrcFiles[0] == null) {
+            return null;
         }
-        return lrcText;
+
+        File mainLrcFile = lrcFiles[0];
+        File secondLrcFile = lrcFiles[1];
+        List<LrcEntry> mainEntryList = parseLrc(mainLrcFile);
+        List<LrcEntry> secondEntryList = parseLrc(secondLrcFile);
+
+        if (mainEntryList != null && secondEntryList != null) {
+            for (LrcEntry mainEntry : mainEntryList) {
+                for (LrcEntry secondEntry : secondEntryList) {
+                    if (mainEntry.getTime() == secondEntry.getTime()) {
+                        mainEntry.setSecondText(secondEntry.getText());
+                    }
+                }
+            }
+        }
+        return mainEntryList;
     }
 
     /**
      * 从文件解析歌词
      */
-    public static List<LrcEntry> parseLrc(File lrcFile) {
+    private static List<LrcEntry> parseLrc(File lrcFile) {
         if (lrcFile == null || !lrcFile.exists()) {
             return null;
         }
@@ -92,9 +92,34 @@ class LrcUtils {
     }
 
     /**
+     * 从文本解析双语歌词
+     */
+    public static List<LrcEntry> parseLrc(String[] lrcTexts) {
+        if (lrcTexts == null || lrcTexts.length != 2 || TextUtils.isEmpty(lrcTexts[0])) {
+            return null;
+        }
+
+        String mainLrcText = lrcTexts[0];
+        String secondLrcText = lrcTexts[1];
+        List<LrcEntry> mainEntryList = parseLrc(mainLrcText);
+        List<LrcEntry> secondEntryList = parseLrc(secondLrcText);
+
+        if (mainEntryList != null && secondEntryList != null) {
+            for (LrcEntry mainEntry : mainEntryList) {
+                for (LrcEntry secondEntry : secondEntryList) {
+                    if (mainEntry.getTime() == secondEntry.getTime()) {
+                        mainEntry.setSecondText(secondEntry.getText());
+                    }
+                }
+            }
+        }
+        return mainEntryList;
+    }
+
+    /**
      * 从文本解析歌词
      */
-    public static List<LrcEntry> parseLrc(String lrcText) {
+    private static List<LrcEntry> parseLrc(String lrcText) {
         if (TextUtils.isEmpty(lrcText)) {
             return null;
         }
@@ -110,6 +135,31 @@ class LrcUtils {
 
         Collections.sort(entryList);
         return entryList;
+    }
+
+    /**
+     * 获取网络文本，需要在工作线程中执行
+     */
+    public static String getContentFromNetwork(String url) {
+        String lrcText = null;
+        try {
+            URL _url = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) _url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setReadTimeout(10000);
+
+            if (conn.getResponseCode() == 200) {
+                InputStream is = conn.getInputStream();
+                int size = conn.getContentLength();
+                byte[] buffer = new byte[size];
+                is.read(buffer);
+                is.close();
+                lrcText = new String(buffer);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return lrcText;
     }
 
     /**
