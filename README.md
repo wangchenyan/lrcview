@@ -21,6 +21,10 @@ Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义�
 ![](https://raw.githubusercontent.com/wangchenyan/lrcview/master/art/screenshot.gif)
 
 ## 更新说明
+`v 2.1.0`
+- 新增支持双语歌词
+- 修复横竖屏切换问题
+
 `v 2.0`
 - 新增上下拖动歌词功能
 
