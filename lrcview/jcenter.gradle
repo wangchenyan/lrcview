@@ -120,12 +120,15 @@ bintray {
 }
 
 project.afterEvaluate {
+    Task clean = tasks.getByPath("clean")
     Task install = tasks.getByPath("install")
     Task bintrayUpload = tasks.getByPath("bintrayUpload")
-    bintrayUpload.mustRunAfter install
+    install.mustRunAfter(clean)
+    bintrayUpload.mustRunAfter(install)
 }
 
 task jcenter {
+    dependsOn("clean")
     dependsOn("install")
     dependsOn("bintrayUpload")
 }
