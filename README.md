@@ -16,7 +16,7 @@
 - 如果喜欢，欢迎Star！
 
 ## 简介
-Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义属性。
+Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义属性，支持双语歌词。
 
 ![](https://raw.githubusercontent.com/wangchenyan/lrcview/master/art/screenshot.gif)
 
