@@ -267,7 +267,12 @@ public class LrcView extends View {
             public void run() {
                 reset();
 
-                final String flag = "file://" + mainLrcFile.getPath() + "#" + secondLrcFile.getPath();
+                StringBuilder sb = new StringBuilder("file://");
+                sb.append(mainLrcFile.getPath());
+                if (secondLrcFile != null) {
+                    sb.append("#").append(secondLrcFile.getPath());
+                }
+                final String flag = sb.toString();
                 setFlag(flag);
                 new AsyncTask<File, Integer, List<LrcEntry>>() {
                     @Override
@@ -309,7 +314,12 @@ public class LrcView extends View {
             public void run() {
                 reset();
 
-                final String flag = "text://" + mainLrcText + "#" + secondLrcText;
+                StringBuilder sb = new StringBuilder("file://");
+                sb.append(mainLrcText);
+                if (secondLrcText != null) {
+                    sb.append("#").append(secondLrcText);
+                }
+                final String flag = sb.toString();
                 setFlag(flag);
                 new AsyncTask<String, Integer, List<LrcEntry>>() {
                     @Override

@@ -56,6 +56,9 @@ public class MainActivity extends AppCompatActivity {
         String mainLrcText = getLrcText("send_it_en.lrc");
         String secondLrcText = getLrcText("send_it_cn.lrc");
         lrcView.loadLrc(mainLrcText, secondLrcText);
+        // File mainLrcFile = new File("/sdcard/Download/send_it_cn.lrc");
+        // File secondLrcFile = new File("/sdcard/Download/send_it_en.lrc");
+        // lrcView.loadLrc(mainLrcFile, secondLrcFile);
 
         lrcView.setDraggable(true, new LrcView.OnPlayClickListener() {
             @Override
