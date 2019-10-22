@@ -76,17 +76,18 @@ implementation 'me.wcy:lrcview:latestVersion'
 ## 方法
 | 方法 | 描述 |
 | ---- | ---- |
-| loadLrc(File) | 加载歌词文件 |
-| loadLrc(File, File) | 加载双语歌词文件，两种语言的歌词时间戳需要一致 |
-| loadLrc(String) | 加载歌词文本 |
-| loadLrc(String, String) | 加载双语歌词文本，两种语言的歌词时间戳需要一致 |
-| loadLrcByUrl(String) | 加载在线歌词文本 |
+| loadLrc(File lrcFile) | 加载歌词文件 |
+| loadLrc(File mainLrcFile, File secondLrcFile) | 加载双语歌词文件，两种语言的歌词时间戳需要一致 |
+| loadLrc(String lrcText) | 加载歌词文本 |
+| loadLrc(String mainLrcText, String secondLrcText) | 加载双语歌词文本，两种语言的歌词时间戳需要一致 |
+| loadLrcByUrl(String lrcUrl) | 加载在线歌词文本，默认使用 utf-8 编码 |
+| loadLrcByUrl(String lrcUrl, String charset) | 加载在线歌词文本 |
 | hasLrc() | 歌词是否有效 |
-| setLabel(String) | 设置歌词为空时视图中央显示的文字，如“暂无歌词” |
-| updateTime(long) | 刷新歌词 |
-| ~~onDrag(long)~~ | ~~将歌词滚动到指定时间。已弃用，请使用 updateTime(long) 代替~~ |
-| ~~setOnPlayClickListener(OnPlayClickListener)~~ | ~~设置拖动歌词时，播放按钮点击监听器。如果为非 null ，则激活歌词拖动功能，否则将将禁用歌词拖动功能。已弃用，请使用 setDraggable 代替~~ |
-| setDraggable(Boolean, OnPlayClickListener) | 设置歌词是否允许拖动。如果允许拖动，则 OnPlayClickListener 不能为 null |
+| setLabel(String label) | 设置歌词为空时视图中央显示的文字，如“暂无歌词” |
+| updateTime(long time) | 刷新歌词 |
+| ~~onDrag(long time)~~ | ~~将歌词滚动到指定时间。已弃用，请使用 updateTime(long) 代替~~ |
+| ~~setOnPlayClickListener(OnPlayClickListener onPlayClickListener)~~ | ~~设置拖动歌词时，播放按钮点击监听器。如果为非 null ，则激活歌词拖动功能，否则将将禁用歌词拖动功能。已弃用，请使用 setDraggable 代替~~ |
+| setDraggable(Boolean draggable, OnPlayClickListener onPlayClickListener) | 设置歌词是否允许拖动。如果允许拖动，则 OnPlayClickListener 不能为 null |
 | setNormalColor | 设置非当前行歌词字体颜色 |
 | setCurrentColor | 设置当前行歌词字体颜色 |
 | setTimelineTextColor | 设置拖动歌词时选中歌词的字体颜色 |

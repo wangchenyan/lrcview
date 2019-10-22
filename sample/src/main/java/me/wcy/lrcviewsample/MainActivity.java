@@ -5,7 +5,6 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 
@@ -35,53 +34,48 @@ public class MainActivity extends AppCompatActivity {
             AssetFileDescriptor fileDescriptor = getAssets().openFd("send_it.m4a");
             mediaPlayer.setDataSource(fileDescriptor.getFileDescriptor(), fileDescriptor.getStartOffset(), fileDescriptor.getLength());
             mediaPlayer.prepareAsync();
-            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    seekBar.setMax(mediaPlayer.getDuration());
-                    seekBar.setProgress(0);
-                }
+            mediaPlayer.setOnPreparedListener(mp -> {
+                seekBar.setMax(mediaPlayer.getDuration());
+                seekBar.setProgress(0);
             });
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    lrcView.updateTime(0);
-                    seekBar.setProgress(0);
-                }
+            mediaPlayer.setOnCompletionListener(mp -> {
+                lrcView.updateTime(0);
+                seekBar.setProgress(0);
             });
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        // 加载歌词文本
         String mainLrcText = getLrcText("send_it_en.lrc");
         String secondLrcText = getLrcText("send_it_cn.lrc");
         lrcView.loadLrc(mainLrcText, secondLrcText);
+
+        // 加载歌词文件
         // File mainLrcFile = new File("/sdcard/Download/send_it_cn.lrc");
         // File secondLrcFile = new File("/sdcard/Download/send_it_en.lrc");
         // lrcView.loadLrc(mainLrcFile, secondLrcFile);
 
-        lrcView.setDraggable(true, new LrcView.OnPlayClickListener() {
-            @Override
-            public boolean onPlayClick(long time) {
-                mediaPlayer.seekTo((int) time);
-                if (!mediaPlayer.isPlaying()) {
-                    mediaPlayer.start();
-                    handler.post(runnable);
-                }
-                return true;
+        // 加载在线歌词
+        // String url = "http://pz6twp8s0.bkt.clouddn.com/%E6%AD%8C%E8%AF%8D.txt";
+        // lrcView.loadLrcByUrl(url, "gb2312");
+
+        lrcView.setDraggable(true, time -> {
+            mediaPlayer.seekTo((int) time);
+            if (!mediaPlayer.isPlaying()) {
+                mediaPlayer.start();
+                handler.post(runnable);
             }
+            return true;
         });
 
-        btnPlayPause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!mediaPlayer.isPlaying()) {
-                    mediaPlayer.start();
-                    handler.post(runnable);
-                } else {
-                    mediaPlayer.pause();
-                    handler.removeCallbacks(runnable);
-                }
+        btnPlayPause.setOnClickListener(v -> {
+            if (!mediaPlayer.isPlaying()) {
+                mediaPlayer.start();
+                handler.post(runnable);
+            } else {
+                mediaPlayer.pause();
+                handler.removeCallbacks(runnable);
             }
         });
 

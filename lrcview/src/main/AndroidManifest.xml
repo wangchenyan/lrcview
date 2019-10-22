@@ -1,1 +1,6 @@
-<manifest package="me.wcy.lrcview" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="me.wcy.lrcview">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+</manifest>

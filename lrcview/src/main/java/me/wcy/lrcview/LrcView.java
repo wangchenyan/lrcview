@@ -44,6 +44,7 @@ import java.util.List;
  * 歌词
  * Created by wcy on 2015/11/9.
  */
+@SuppressLint("StaticFieldLeak")
 public class LrcView extends View {
     private static final long ADJUST_DURATION = 100;
     private static final long TIMELINE_KEEP_TIME = 4 * DateUtils.SECOND_IN_MILLIS;
@@ -235,13 +236,10 @@ public class LrcView extends View {
     /**
      * 设置歌词为空时屏幕中央显示的文字，如“暂无歌词”
      */
-    public void setLabel(final String label) {
-        runOnUi(new Runnable() {
-            @Override
-            public void run() {
-                mDefaultLabel = label;
-                invalidate();
-            }
+    public void setLabel(String label) {
+        runOnUi(() -> {
+            mDefaultLabel = label;
+            invalidate();
         });
     }
 
@@ -250,7 +248,7 @@ public class LrcView extends View {
      *
      * @param lrcFile 歌词文件
      */
-    public void loadLrc(final File lrcFile) {
+    public void loadLrc(File lrcFile) {
         loadLrc(lrcFile, null);
     }
 
@@ -260,35 +258,31 @@ public class LrcView extends View {
      * @param mainLrcFile   第一种语言歌词文件
      * @param secondLrcFile 第二种语言歌词文件
      */
-    public void loadLrc(final File mainLrcFile, final File secondLrcFile) {
-        runOnUi(new Runnable() {
-            @SuppressLint("StaticFieldLeak")
-            @Override
-            public void run() {
-                reset();
+    public void loadLrc(File mainLrcFile, File secondLrcFile) {
+        runOnUi(() -> {
+            reset();
 
-                StringBuilder sb = new StringBuilder("file://");
-                sb.append(mainLrcFile.getPath());
-                if (secondLrcFile != null) {
-                    sb.append("#").append(secondLrcFile.getPath());
-                }
-                final String flag = sb.toString();
-                setFlag(flag);
-                new AsyncTask<File, Integer, List<LrcEntry>>() {
-                    @Override
-                    protected List<LrcEntry> doInBackground(File... params) {
-                        return LrcUtils.parseLrc(params);
-                    }
-
-                    @Override
-                    protected void onPostExecute(List<LrcEntry> lrcEntries) {
-                        if (getFlag() == flag) {
-                            onLrcLoaded(lrcEntries);
-                            setFlag(null);
-                        }
-                    }
-                }.execute(mainLrcFile, secondLrcFile);
+            StringBuilder sb = new StringBuilder("file://");
+            sb.append(mainLrcFile.getPath());
+            if (secondLrcFile != null) {
+                sb.append("#").append(secondLrcFile.getPath());
             }
+            String flag = sb.toString();
+            setFlag(flag);
+            new AsyncTask<File, Integer, List<LrcEntry>>() {
+                @Override
+                protected List<LrcEntry> doInBackground(File... params) {
+                    return LrcUtils.parseLrc(params);
+                }
+
+                @Override
+                protected void onPostExecute(List<LrcEntry> lrcEntries) {
+                    if (getFlag() == flag) {
+                        onLrcLoaded(lrcEntries);
+                        setFlag(null);
+                    }
+                }
+            }.execute(mainLrcFile, secondLrcFile);
         });
     }
 
@@ -297,7 +291,7 @@ public class LrcView extends View {
      *
      * @param lrcText 歌词文本
      */
-    public void loadLrc(final String lrcText) {
+    public void loadLrc(String lrcText) {
         loadLrc(lrcText, null);
     }
 
@@ -307,51 +301,56 @@ public class LrcView extends View {
      * @param mainLrcText   第一种语言歌词文本
      * @param secondLrcText 第二种语言歌词文本
      */
-    public void loadLrc(final String mainLrcText, final String secondLrcText) {
-        runOnUi(new Runnable() {
-            @SuppressLint("StaticFieldLeak")
-            @Override
-            public void run() {
-                reset();
+    public void loadLrc(String mainLrcText, String secondLrcText) {
+        runOnUi(() -> {
+            reset();
 
-                StringBuilder sb = new StringBuilder("file://");
-                sb.append(mainLrcText);
-                if (secondLrcText != null) {
-                    sb.append("#").append(secondLrcText);
-                }
-                final String flag = sb.toString();
-                setFlag(flag);
-                new AsyncTask<String, Integer, List<LrcEntry>>() {
-                    @Override
-                    protected List<LrcEntry> doInBackground(String... params) {
-                        return LrcUtils.parseLrc(params);
-                    }
-
-                    @Override
-                    protected void onPostExecute(List<LrcEntry> lrcEntries) {
-                        if (getFlag() == flag) {
-                            onLrcLoaded(lrcEntries);
-                            setFlag(null);
-                        }
-                    }
-                }.execute(mainLrcText, secondLrcText);
+            StringBuilder sb = new StringBuilder("file://");
+            sb.append(mainLrcText);
+            if (secondLrcText != null) {
+                sb.append("#").append(secondLrcText);
             }
+            String flag = sb.toString();
+            setFlag(flag);
+            new AsyncTask<String, Integer, List<LrcEntry>>() {
+                @Override
+                protected List<LrcEntry> doInBackground(String... params) {
+                    return LrcUtils.parseLrc(params);
+                }
+
+                @Override
+                protected void onPostExecute(List<LrcEntry> lrcEntries) {
+                    if (getFlag() == flag) {
+                        onLrcLoaded(lrcEntries);
+                        setFlag(null);
+                    }
+                }
+            }.execute(mainLrcText, secondLrcText);
         });
+    }
+
+    /**
+     * 加载在线歌词，默认使用 utf-8 编码
+     *
+     * @param lrcUrl 歌词文件的网络地址
+     */
+    public void loadLrcByUrl(String lrcUrl) {
+        loadLrcByUrl(lrcUrl, "utf-8");
     }
 
     /**
      * 加载在线歌词
      *
-     * @param lrcUrl 歌词文件的网络地址
+     * @param lrcUrl  歌词文件的网络地址
+     * @param charset 编码格式
      */
-    @SuppressLint("StaticFieldLeak")
-    public void loadLrcByUrl(final String lrcUrl) {
-        final String flag = "url://" + lrcUrl;
+    public void loadLrcByUrl(String lrcUrl, String charset) {
+        String flag = "url://" + lrcUrl;
         setFlag(flag);
         new AsyncTask<String, Integer, String>() {
             @Override
             protected String doInBackground(String... params) {
-                return LrcUtils.getContentFromNetwork(params[0]);
+                return LrcUtils.getContentFromNetwork(params[0], params[1]);
             }
 
             @Override
@@ -360,7 +359,7 @@ public class LrcView extends View {
                     loadLrc(lrcText);
                 }
             }
-        }.execute(lrcUrl);
+        }.execute(lrcUrl, charset);
     }
 
     /**
@@ -377,22 +376,19 @@ public class LrcView extends View {
      *
      * @param time 当前播放时间
      */
-    public void updateTime(final long time) {
-        runOnUi(new Runnable() {
-            @Override
-            public void run() {
-                if (!hasLrc()) {
-                    return;
-                }
+    public void updateTime(long time) {
+        runOnUi(() -> {
+            if (!hasLrc()) {
+                return;
+            }
 
-                int line = findShowLine(time);
-                if (line != mCurrentLine) {
-                    mCurrentLine = line;
-                    if (!isShowTimeline) {
-                        smoothScrollTo(line);
-                    } else {
-                        invalidate();
-                    }
+            int line = findShowLine(time);
+            if (line != mCurrentLine) {
+                mCurrentLine = line;
+                if (!isShowTimeline) {
+                    smoothScrollTo(line);
+                } else {
+                    invalidate();
                 }
             }
         });
@@ -457,7 +453,7 @@ public class LrcView extends View {
         float y = 0;
         for (int i = 0; i < mLrcEntryList.size(); i++) {
             if (i > 0) {
-                y += (mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) / 2 + mDividerHeight;
+                y += ((mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) >> 1) + mDividerHeight;
             }
             if (i == mCurrentLine) {
                 mLrcPaint.setTextSize(mCurrentTextSize);
@@ -479,7 +475,7 @@ public class LrcView extends View {
      */
     private void drawText(Canvas canvas, StaticLayout staticLayout, float y) {
         canvas.save();
-        canvas.translate(mLrcPadding, y - staticLayout.getHeight() / 2);
+        canvas.translate(mLrcPadding, y - (staticLayout.getHeight() >> 1));
         staticLayout.draw(canvas);
         canvas.restore();
     }
@@ -653,12 +649,9 @@ public class LrcView extends View {
         mAnimator = ValueAnimator.ofFloat(mOffset, offset);
         mAnimator.setDuration(duration);
         mAnimator.setInterpolator(new LinearInterpolator());
-        mAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                mOffset = (float) animation.getAnimatedValue();
-                invalidate();
-            }
+        mAnimator.addUpdateListener(animation -> {
+            mOffset = (float) animation.getAnimatedValue();
+            invalidate();
         });
         LrcUtils.resetDurationScale();
         mAnimator.start();
@@ -720,7 +713,7 @@ public class LrcView extends View {
         if (mLrcEntryList.get(line).getOffset() == Float.MIN_VALUE) {
             float offset = getHeight() / 2;
             for (int i = 1; i <= line; i++) {
-                offset -= (mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) / 2 + mDividerHeight;
+                offset -= ((mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) >> 1) + mDividerHeight;
             }
             mLrcEntryList.get(line).setOffset(offset);
         }

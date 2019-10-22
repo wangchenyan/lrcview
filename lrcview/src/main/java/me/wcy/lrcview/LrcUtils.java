@@ -19,6 +19,7 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -42,7 +43,7 @@ class LrcUtils {
     /**
      * 从文件解析双语歌词
      */
-    public static List<LrcEntry> parseLrc(File[] lrcFiles) {
+    static List<LrcEntry> parseLrc(File[] lrcFiles) {
         if (lrcFiles == null || lrcFiles.length != 2 || lrcFiles[0] == null) {
             return null;
         }
@@ -94,7 +95,7 @@ class LrcUtils {
     /**
      * 从文本解析双语歌词
      */
-    public static List<LrcEntry> parseLrc(String[] lrcTexts) {
+    static List<LrcEntry> parseLrc(String[] lrcTexts) {
         if (lrcTexts == null || lrcTexts.length != 2 || TextUtils.isEmpty(lrcTexts[0])) {
             return null;
         }
@@ -140,23 +141,27 @@ class LrcUtils {
     /**
      * 获取网络文本，需要在工作线程中执行
      */
-    public static String getContentFromNetwork(String url) {
+    static String getContentFromNetwork(String url, String charset) {
         String lrcText = null;
         try {
             URL _url = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) _url.openConnection();
             conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10000);
             conn.setReadTimeout(10000);
-
             if (conn.getResponseCode() == 200) {
                 InputStream is = conn.getInputStream();
-                int size = conn.getContentLength();
-                byte[] buffer = new byte[size];
-                is.read(buffer);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024];
+                int len;
+                while ((len = is.read(buffer)) != -1) {
+                    bos.write(buffer, 0, len);
+                }
                 is.close();
-                lrcText = new String(buffer);
+                bos.close();
+                lrcText = bos.toString(charset);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return lrcText;
@@ -201,7 +206,7 @@ class LrcUtils {
     /**
      * 转为[分:秒]
      */
-    public static String formatTime(long milli) {
+    static String formatTime(long milli) {
         int m = (int) (milli / DateUtils.MINUTE_IN_MILLIS);
         int s = (int) ((milli / DateUtils.SECOND_IN_MILLIS) % 60);
         String mm = String.format(Locale.getDefault(), "%02d", m);
@@ -209,7 +214,7 @@ class LrcUtils {
         return mm + ":" + ss;
     }
 
-    public static void resetDurationScale() {
+    static void resetDurationScale() {
         try {
             Field mField = ValueAnimator.class.getDeclaredField("sDurationScale");
             mField.setAccessible(true);
