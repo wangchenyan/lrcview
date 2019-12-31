@@ -39,6 +39,8 @@ import java.util.regex.Pattern;
  * 工具类
  */
 class LrcUtils {
+    private static final Pattern PATTERN_LINE = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d{2,3}\\])+)(.+)");
+    private static final Pattern PATTERN_TIME = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d{2,3})\\]");
 
     /**
      * 从文件解析双语歌词
@@ -125,6 +127,10 @@ class LrcUtils {
             return null;
         }
 
+        if (lrcText.startsWith("\uFEFF")) {
+            lrcText = lrcText.replace("\uFEFF", "");
+        }
+
         List<LrcEntry> entryList = new ArrayList<>();
         String[] array = lrcText.split("\\n");
         for (String line : array) {
@@ -177,7 +183,7 @@ class LrcUtils {
 
         line = line.trim();
         // [00:17.65]让我掉下眼泪的
-        Matcher lineMatcher = Pattern.compile("((\\[\\d\\d:\\d\\d\\.\\d{2,3}\\])+)(.+)").matcher(line);
+        Matcher lineMatcher = PATTERN_LINE.matcher(line);
         if (!lineMatcher.matches()) {
             return null;
         }
@@ -187,7 +193,7 @@ class LrcUtils {
         List<LrcEntry> entryList = new ArrayList<>();
 
         // [00:17.65]
-        Matcher timeMatcher = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d{2,3})\\]").matcher(times);
+        Matcher timeMatcher = PATTERN_TIME.matcher(times);
         while (timeMatcher.find()) {
             long min = Long.parseLong(timeMatcher.group(1));
             long sec = Long.parseLong(timeMatcher.group(2));
