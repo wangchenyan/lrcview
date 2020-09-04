@@ -68,6 +68,7 @@ public class LrcView extends View {
     private String mDefaultLabel;
     private float mLrcPadding;
     private OnPlayClickListener mOnPlayClickListener;
+    private OnTapListener mOnTapListener;
     private ValueAnimator mAnimator;
     private GestureDetector mGestureDetector;
     private Scroller mScroller;
@@ -77,7 +78,10 @@ public class LrcView extends View {
     private boolean isShowTimeline;
     private boolean isTouching;
     private boolean isFling;
-    private int mTextGravity;//歌词显示位置，靠左/居中/靠右
+    /**
+     * 歌词显示位置，靠左/居中/靠右
+     */
+    private int mTextGravity;
 
     /**
      * 播放按钮点击监听器，点击后应该跳转到指定播放位置
@@ -86,9 +90,26 @@ public class LrcView extends View {
         /**
          * 播放按钮被点击，应该跳转到指定播放位置
          *
+         * @param view 歌词控件
+         * @param time 选中播放进度
          * @return 是否成功消费该事件，如果成功消费，则会更新UI
          */
-        boolean onPlayClick(long time);
+        boolean onPlayClick(LrcView view, long time);
+    }
+
+    /**
+     * 歌词控件点击监听器
+     */
+    public interface OnTapListener {
+        /**
+         * 歌词控件被点击
+         *
+         * @param view 歌词控件
+         * @param x    点击坐标x，相对于控件
+         * @param y    点击坐标y，相对于控件
+         * @return 是否消费该事件，true 表示消费，否则表示未消费
+         */
+        void onTap(LrcView view, float x, float y);
     }
 
     public LrcView(Context context) {
@@ -231,6 +252,15 @@ public class LrcView extends View {
     @Deprecated
     public void setOnPlayClickListener(OnPlayClickListener onPlayClickListener) {
         mOnPlayClickListener = onPlayClickListener;
+    }
+
+    /**
+     * 设置歌词控件点击监听器
+     *
+     * @param onTapListener 歌词控件点击监听器
+     */
+    public void setOnTapListener(OnTapListener onTapListener) {
+        mOnTapListener = onTapListener;
     }
 
     /**
@@ -484,7 +514,8 @@ public class LrcView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
             isTouching = false;
-            if (hasLrc() && !isFling) {
+            // 启动延时任务，恢复歌词位置
+            if (hasLrc() && isShowTimeline && !isFling) {
                 adjustCenter();
                 postDelayed(hideTimelineRunnable, TIMELINE_KEEP_TIME);
             }
@@ -498,32 +529,38 @@ public class LrcView extends View {
     private GestureDetector.SimpleOnGestureListener mSimpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
         @Override
         public boolean onDown(MotionEvent e) {
-            if (hasLrc() && mOnPlayClickListener != null) {
+            if (!hasLrc()) {
+                return super.onDown(e);
+            }
+            return mOnPlayClickListener != null || mOnTapListener != null;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            if (!hasLrc() || mOnPlayClickListener == null) {
+                return super.onScroll(e1, e2, distanceX, distanceY);
+            }
+            if (!isShowTimeline) {
                 mScroller.forceFinished(true);
                 removeCallbacks(hideTimelineRunnable);
                 isTouching = true;
                 isShowTimeline = true;
                 invalidate();
-                return true;
-            }
-            return super.onDown(e);
-        }
-
-        @Override
-        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            if (hasLrc()) {
+            } else {
                 mOffset += -distanceY;
                 mOffset = Math.min(mOffset, getOffset(0));
                 mOffset = Math.max(mOffset, getOffset(mLrcEntryList.size() - 1));
                 invalidate();
-                return true;
             }
-            return super.onScroll(e1, e2, distanceX, distanceY);
+            return true;
         }
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (hasLrc()) {
+            if (!hasLrc() || mOnPlayClickListener == null) {
+                return super.onFling(e1, e2, velocityX, velocityY);
+            }
+            if (isShowTimeline) {
                 mScroller.fling(0, (int) mOffset, 0, (int) velocityY, 0, 0, (int) getOffset(mLrcEntryList.size() - 1), (int) getOffset(0));
                 isFling = true;
                 return true;
@@ -533,17 +570,22 @@ public class LrcView extends View {
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
-            if (hasLrc() && isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
+            if (!hasLrc()) {
+                return super.onSingleTapConfirmed(e);
+            }
+            if (mOnPlayClickListener != null && isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
                 int centerLine = getCenterLine();
                 long centerLineTime = mLrcEntryList.get(centerLine).getTime();
                 // onPlayClick 消费了才更新 UI
-                if (mOnPlayClickListener != null && mOnPlayClickListener.onPlayClick(centerLineTime)) {
+                if (mOnPlayClickListener != null && mOnPlayClickListener.onPlayClick(LrcView.this, centerLineTime)) {
                     isShowTimeline = false;
                     removeCallbacks(hideTimelineRunnable);
                     mCurrentLine = centerLine;
                     invalidate();
                     return true;
                 }
+            } else if (mOnTapListener != null) {
+                mOnTapListener.onTap(LrcView.this, e.getX(), e.getY());
             }
             return super.onSingleTapConfirmed(e);
         }

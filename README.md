@@ -21,6 +21,9 @@ Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义�
 ![](https://raw.githubusercontent.com/wangchenyan/lrcview/master/art/screenshot.gif)
 
 ## 更新说明
+`v 2.2`
+- 新增支持点击事件
+
 `v 2.1.0`
 - 新增支持双语歌词
 - 修复横竖屏切换问题
@@ -88,6 +91,7 @@ implementation 'me.wcy:lrcview:latestVersion'
 | ~~onDrag(long time)~~ | ~~将歌词滚动到指定时间。已弃用，请使用 updateTime(long) 代替~~ |
 | ~~setOnPlayClickListener(OnPlayClickListener onPlayClickListener)~~ | ~~设置拖动歌词时，播放按钮点击监听器。如果为非 null ，则激活歌词拖动功能，否则将将禁用歌词拖动功能。已弃用，请使用 setDraggable 代替~~ |
 | setDraggable(Boolean draggable, OnPlayClickListener onPlayClickListener) | 设置歌词是否允许拖动。如果允许拖动，则 OnPlayClickListener 不能为 null |
+| setOnTapListener(LrcView view, float x, float y) | 设置歌词控件点击监听器 |
 | setNormalColor | 设置非当前行歌词字体颜色 |
 | setCurrentColor | 设置当前行歌词字体颜色 |
 | setTimelineTextColor | 设置拖动歌词时选中歌词的字体颜色 |
