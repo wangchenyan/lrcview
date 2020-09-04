@@ -107,7 +107,6 @@ public class LrcView extends View {
          * @param view 歌词控件
          * @param x    点击坐标x，相对于控件
          * @param y    点击坐标y，相对于控件
-         * @return 是否消费该事件，true 表示消费，否则表示未消费
          */
         void onTap(LrcView view, float x, float y);
     }
