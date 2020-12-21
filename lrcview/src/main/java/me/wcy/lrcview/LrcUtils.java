@@ -15,6 +15,7 @@
 package me.wcy.lrcview;
 
 import android.animation.ValueAnimator;
+import android.os.Build;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 
@@ -220,11 +221,17 @@ class LrcUtils {
         return mm + ":" + ss;
     }
 
+    /**
+     * 强制开启动画
+     * Android 10 以后无法使用
+     */
     static void resetDurationScale() {
         try {
-            Field mField = ValueAnimator.class.getDeclaredField("sDurationScale");
-            mField.setAccessible(true);
-            mField.setFloat(null, 1);
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                Field mField = ValueAnimator.class.getDeclaredField("sDurationScale");
+                mField.setAccessible(true);
+                mField.setFloat(null, 1);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
