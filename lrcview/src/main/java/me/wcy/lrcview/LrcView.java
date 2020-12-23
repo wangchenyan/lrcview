@@ -29,6 +29,7 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -46,6 +47,7 @@ import java.util.List;
  */
 @SuppressLint("StaticFieldLeak")
 public class LrcView extends View {
+    private static final String TAG = "LrcView";
     private static final long ADJUST_DURATION = 100;
     private static final long TIMELINE_KEEP_TIME = 4 * DateUtils.SECOND_IN_MILLIS;
 
@@ -513,8 +515,8 @@ public class LrcView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
             isTouching = false;
-            // 启动延时任务，恢复歌词位置
-            if (hasLrc() && isShowTimeline && !isFling) {
+            // 手指离开屏幕，启动延时任务，恢复歌词位置
+            if (hasLrc() && isShowTimeline) {
                 adjustCenter();
                 postDelayed(hideTimelineRunnable, TIMELINE_KEEP_TIME);
             }
@@ -526,10 +528,21 @@ public class LrcView extends View {
      * 手势监听器
      */
     private GestureDetector.SimpleOnGestureListener mSimpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
+        // 本次点击仅仅为了停止歌词滚动，则不响应点击事件
+        private boolean isTouchForStopFling = false;
+
         @Override
         public boolean onDown(MotionEvent e) {
             if (!hasLrc()) {
                 return super.onDown(e);
+            }
+            isTouching = true;
+            removeCallbacks(hideTimelineRunnable);
+            if (isFling) {
+                isTouchForStopFling = true;
+                mScroller.forceFinished(true);
+            } else {
+                isTouchForStopFling = false;
             }
             return mOnPlayClickListener != null || mOnTapListener != null;
         }
@@ -540,17 +553,13 @@ public class LrcView extends View {
                 return super.onScroll(e1, e2, distanceX, distanceY);
             }
             if (!isShowTimeline) {
-                mScroller.forceFinished(true);
-                removeCallbacks(hideTimelineRunnable);
-                isTouching = true;
                 isShowTimeline = true;
-                invalidate();
             } else {
                 mOffset += -distanceY;
                 mOffset = Math.min(mOffset, getOffset(0));
                 mOffset = Math.max(mOffset, getOffset(mLrcEntryList.size() - 1));
-                invalidate();
             }
+            invalidate();
             return true;
         }
 
@@ -560,8 +569,9 @@ public class LrcView extends View {
                 return super.onFling(e1, e2, velocityX, velocityY);
             }
             if (isShowTimeline) {
-                mScroller.fling(0, (int) mOffset, 0, (int) velocityY, 0, 0, (int) getOffset(mLrcEntryList.size() - 1), (int) getOffset(0));
                 isFling = true;
+                removeCallbacks(hideTimelineRunnable);
+                mScroller.fling(0, (int) mOffset, 0, (int) velocityY, 0, 0, (int) getOffset(mLrcEntryList.size() - 1), (int) getOffset(0));
                 return true;
             }
             return super.onFling(e1, e2, velocityX, velocityY);
@@ -583,7 +593,7 @@ public class LrcView extends View {
                     invalidate();
                     return true;
                 }
-            } else if (mOnTapListener != null) {
+            } else if (mOnTapListener != null && !isTouchForStopFling) {
                 mOnTapListener.onTap(LrcView.this, e.getX(), e.getY());
             }
             return super.onSingleTapConfirmed(e);
@@ -593,6 +603,7 @@ public class LrcView extends View {
     private Runnable hideTimelineRunnable = new Runnable() {
         @Override
         public void run() {
+            Log.d(TAG, "hideTimelineRunnable run");
             if (hasLrc() && isShowTimeline) {
                 isShowTimeline = false;
                 smoothScrollTo(mCurrentLine);
@@ -608,6 +619,7 @@ public class LrcView extends View {
         }
 
         if (isFling && mScroller.isFinished()) {
+            Log.d(TAG, "fling finish");
             isFling = false;
             if (hasLrc() && !isTouching) {
                 adjustCenter();
