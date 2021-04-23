@@ -534,7 +534,7 @@ public class LrcView extends View {
         @Override
         public boolean onDown(MotionEvent e) {
             if (!hasLrc()) {
-                return super.onDown(e);
+                return mOnTapListener != null;
             }
             isTouching = true;
             removeCallbacks(hideTimelineRunnable);
@@ -579,10 +579,7 @@ public class LrcView extends View {
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
-            if (!hasLrc()) {
-                return super.onSingleTapConfirmed(e);
-            }
-            if (mOnPlayClickListener != null && isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
+            if (hasLrc() && mOnPlayClickListener != null && isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
                 int centerLine = getCenterLine();
                 long centerLineTime = mLrcEntryList.get(centerLine).getTime();
                 // onPlayClick 消费了才更新 UI
