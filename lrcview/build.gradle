@@ -2,13 +2,14 @@ apply plugin: 'com.android.library'
 
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
     }
     dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.1'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
     }
 }
+
+group = 'me.wcy'
 
 android {
     compileSdkVersion Integer.parseInt(COMPILE_SDK_VERSION)
@@ -26,5 +27,3 @@ android {
         targetCompatibility = 1.8
     }
 }
-
-apply from: 'jcenter.gradle'
