@@ -1,5 +1,5 @@
 # lrcview
-[![Download](https://api.bintray.com/packages/chanwong21/maven/lrcview/images/download.svg)](https://bintray.com/chanwong21/maven/lrcview/_latestVersion)
+[![](https://jitpack.io/v/wangchenyan/lrcview.svg)](https://jitpack.io/#wangchenyan/lrcview)
 
 ## 系列文章
 - [Android开源在线音乐播放器——波尼音乐](https://juejin.im/post/5c373a32e51d4551cc6df6db)
@@ -53,6 +53,15 @@ Android歌词控件，支持上下拖动歌词，歌词自动换行，自定义�
 ## 使用
 **Gradle**
 ```
+// root project build.gradle
+allprojects {
+    repositories {
+        ...
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+// module build.gradle
 // "latestVersion"改为文首徽章后对应的数值
 implementation 'me.wcy:lrcview:latestVersion'
 ```
