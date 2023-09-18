@@ -1,15 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion Integer.parseInt(COMPILE_SDK_VERSION)
-    buildToolsVersion BUILD_TOOLS_VERSION
+    namespace 'me.wcy.lrcviewsample'
+    compileSdk 33
 
     defaultConfig {
         applicationId "me.wcy.lrcviewsample"
-        minSdkVersion Integer.parseInt(MIN_SDK_VERSION)
-        targetSdkVersion Integer.parseInt(TARGET_SDK_VERSION)
+        minSdkVersion 14
+        targetSdkVersion 33
         versionCode 1
-        versionName VERSION_NAME
+        versionName "2.2"
     }
 
     buildTypes {
@@ -27,6 +27,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation project(':lrcview')
 }
