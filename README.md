@@ -250,6 +250,10 @@ private void scrollTo(int line, long duration) {
 代码比较简单，大家根据源码和注释很容易就能看懂。到这里，我们已经实现了可拖动的歌词控件了。<br>
 截图看比较简单，大家可以运行源码或下载[波尼音乐](https://github.com/wangchenyan/ponymusic)查看详细效果。
 
+## Liked it?
+如果你觉得该项目对你有帮助，欢迎给它一个 star⭐️
+[![Stargazers over time](https://starchart.cc/wangchenyan/lrcview.svg?variant=adaptive)](https://starchart.cc/wangchenyan/lrcview)
+
 ## 关于作者
 掘金：https://juejin.cn/user/2313028193754168<br>
 微博：https://weibo.com/wangchenyan1993
