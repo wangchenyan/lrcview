@@ -483,9 +483,19 @@ public class LrcView extends View {
 
         float y = 0;
         for (int i = 0; i < mLrcEntryList.size(); i++) {
+            int currentLineHeight = mLrcEntryList.get(i).getHeight();
             if (i > 0) {
-                y += ((mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) >> 1) + mDividerHeight;
+                int lastLineHeight = mLrcEntryList.get(i - 1).getHeight();
+                y += lastLineHeight / 2f + mDividerHeight + currentLineHeight / 2f;
             }
+
+            float textTop = y - currentLineHeight / 2f + mOffset;
+            float textBottom = textTop + currentLineHeight;
+            if (textBottom < 0 || textTop > getHeight()) {
+                // 当前行完全不可见，不需要绘制
+                continue;
+            }
+
             if (i == mCurrentLine) {
                 mLrcPaint.setTextSize(mCurrentTextSize);
                 mLrcPaint.setColor(mCurrentTextColor);
@@ -763,7 +773,9 @@ public class LrcView extends View {
         if (mLrcEntryList.get(line).getOffset() == Float.MIN_VALUE) {
             float offset = getHeight() / 2;
             for (int i = 1; i <= line; i++) {
-                offset -= ((mLrcEntryList.get(i - 1).getHeight() + mLrcEntryList.get(i).getHeight()) >> 1) + mDividerHeight;
+                int lastLineHeight = mLrcEntryList.get(i - 1).getHeight();
+                int currentLineHeight = mLrcEntryList.get(i).getHeight();
+                offset -= lastLineHeight / 2f + mDividerHeight + currentLineHeight / 2f;
             }
             mLrcEntryList.get(line).setOffset(offset);
         }
